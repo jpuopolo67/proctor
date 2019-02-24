@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 
+
 class GitLabServer:
     """Abstracts the GitLab server that contains our users, groups, and projects."""
     _GITLAB_API_VERSION = 3
@@ -63,16 +64,15 @@ class GitLabServer:
 
     def clone_project(self, gitlab_project, dest_path_name, force=False):
         dest_path = Path(dest_path_name)
-
         try:
             http_url = gitlab_project.http_url_to_repo
             print(str.format("Cloning repo {}...{}", http_url, "(FORCED)" if force else ''))
             self._init_dest_path(dest_path, force)
-            shell_cmd = str.format("git clone {repo} {dest_dir}", repo=http_url, dest_dir=str(dest_path))
+            shell_cmd = str.format("git clone {repo} {dest_dir}",
+                                   repo=http_url, dest_dir=str(dest_path))
             os.system(shell_cmd)
         except FileExistsError as fex:
             print(fex)
-
 
     def _init_dest_path(self, dest_path, force):
         if not dest_path.exists():

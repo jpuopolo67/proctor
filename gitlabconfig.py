@@ -2,6 +2,7 @@ import os
 import configparser
 from pathlib import Path
 
+
 class GitLabConfiguration:
     """Manages Proctor's configuration file."""
 
@@ -38,11 +39,9 @@ class GitLabConfiguration:
         """Reads the configuration file."""
         cfg = configparser.ConfigParser()
         cfg.read(self._config_file)
-
         self._proctor_working_dir = cfg['Proctor']['working_dir']
         self._gitlab_server_url = cfg['GitLabServer']['url']
         self._gitlab_user_private_token = cfg['GitLabUser']['private_token']
-
 
     def get_server_url(self):
         return self._gitlab_server_url
