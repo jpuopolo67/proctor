@@ -21,7 +21,7 @@ class Proctor:
         :return File system path name."""
 
         owner_dir_name = GitLabServer.build_project_path(email, project_name)
-        dest_path_name = str.format("{}/{}", working_dir, owner_dir_name)
+        dest_path_name ="{}/{}".format(working_dir, owner_dir_name)
         return dest_path_name
 
 

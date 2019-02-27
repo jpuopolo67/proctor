@@ -21,19 +21,20 @@ class GitLabConfiguration:
             return config_file_path
 
         # Check the current working directory
-        cfg_file_path = Path((os.getcwd() + "/" + GitLabConfiguration._DEFAULT_CONFIG_FILE))
+        cfg_file_path = Path('/'.join([os.getcwd(), GitLabConfiguration._DEFAULT_CONFIG_FILE]))
         if Path.exists(cfg_file_path):
             return cfg_file_path
 
         # Check the currently logged in user's directory
-        cfg_file_path = Path((os.path.expanduser('~') + "/" + GitLabConfiguration._DEFAULT_CONFIG_FILE))
+        cfg_file_path = Path('/'.join([os.path.expanduser('~'),
+                                       GitLabConfiguration._DEFAULT_CONFIG_FILE]))
         if Path.exists(cfg_file_path):
             return cfg_file_path
 
         # No configuration file found. We can't run!
-        raise FileNotFoundError(str.format(
-            "Cannot find the configuration file '{}' in the current working directory or your home directory.",
-            GitLabConfiguration._DEFAULT_CONFIG_FILE))
+        raise FileNotFoundError("Cannot find the configuration file '{}' in the current "
+                                "working directory or your home directory.".format(
+                                GitLabConfiguration._DEFAULT_CONFIG_FILE))
 
     def _load_config_settings_from_file(self):
         """Reads the configuration file."""

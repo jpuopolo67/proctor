@@ -18,7 +18,7 @@ class GitLabServer:
         repo_name = owner_email
         if '@' in owner_email:
             repo_name = owner_email.split('@')[0]
-        repo_name = str.format('{}/{}', repo_name, project_name)
+        repo_name = '{}/{}'.format(repo_name, project_name)
         return repo_name
 
     def __init__(self, server_url, api_version=_GITLAB_API_VERSION):
@@ -52,7 +52,7 @@ class GitLabServer:
             return None         # didn't find the user
 
         # If we get here, we found > 1 user
-        errmsg = str.format("Ambiguous email '{}'. Try again with a more specific email.", email)
+        errmsg = "Ambiguous email '{}'. Try again with a more specific email.".format(email)
         raise ValueError(errmsg)
 
     def get_user_by_id(self, userid):
@@ -66,9 +66,9 @@ class GitLabServer:
         dest_path = Path(dest_path_name)
         try:
             http_url = gitlab_project.http_url_to_repo
-            print(str.format("Cloning repo {}...{}", http_url, "(FORCED)" if force else ''))
+            print('Cloning repo {}...{}'.format(http_url, "(FORCED)" if force else ''))
             self._init_dest_path(dest_path, force)
-            shell_cmd = str.format("git clone {repo} {dest_dir}",
+            shell_cmd = 'git clone {repo} {dest_dir}'.format(
                                    repo=http_url, dest_dir=str(dest_path))
             os.system(shell_cmd)
         except FileExistsError as fex:
@@ -82,7 +82,8 @@ class GitLabServer:
             dest_path.mkdir(parents=True, exist_ok=True)
             return
 
-        errmsg = str.format("FAILED: Destination directory '{}' already exists. Use --force to overwrite.", str(dest_path))
+        errmsg = "FAILED: Destination directory '{}' already exists. " \
+                 "Use --force to overwrite.".format(dest_path)
         raise FileExistsError(errmsg)
 
 
