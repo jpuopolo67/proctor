@@ -3,6 +3,7 @@ from gitlabconfig import GitLabConfiguration
 from gitlabserver import GitLabServer
 from gitlabuser import GitLabUser
 import argparse
+import plogger
 import sys
 
 
@@ -24,25 +25,43 @@ class Proctor:
         dest_path_name ="{}/{}".format(working_dir, owner_dir_name)
         return dest_path_name
 
-
-    def __init__(self, server, user, working_dir, app_logger):
-        """Initizlies the Proctor"""
-        self._server = server
-        self._user = user
-        self._working_dir_name = working_dir
-        self._argparser = argparse.ArgumentParser()
+    def __init__(self, cfg):
+        """Initializes the Proctor"""
+        self._cfg = cfg
+        self._init_working_dir()
         self._init_args()
+        self._init_server()
+        self._init_logger()
+
+        # As a final step, log into the server
         self._server.login(self._user)
 
 
+    def _init_logger(self):
+        self.logger = plogger.ProctorLogger('proctor',
+                                            self._cfg.get_config_value('Proctor', 'log_level'),
+                                            self._cfg.get_config_value('Proctor', 'log_to_console'),
+                                            self._working_dir_name,
+                                            self._cfg.get_config_value('Proctor', 'logfile_name'))
+
+
+    def _init_working_dir(self):
+        self._working_dir_name = self._cfg.get_proctor_working_dir()
+
     def _init_args(self):
         """Helper method that initializes initializes program args"""
+        self._argparser = argparse.ArgumentParser()
         self._argparser.add_argument("cmd", help="command for Proctor to execute: clone (initgb, grade, regrade)")
         self._argparser.add_argument("--project", help="name of the assignment, lab or project")
         self._argparser.add_argument("--emails", help="path to text file containing student emails")
         self._argparser.add_argument("--force", help="force overwrite of existing directory or data", action="store_true")
         self._args = self._argparser.parse_args()
         self._argsdict = vars(self._args)
+
+
+    def _init_server(self):
+        self._server = GitLabServer(self._cfg.get_config_value('GitLabServer', 'url'))
+        self._user = GitLabUser(self._cfg.get_config_value('GitLabUser', 'private_token'))
 
 
     def _are_args_valid(self):
@@ -68,7 +87,6 @@ class Proctor:
         if not self._are_args_valid():
             print("Invalid command or incompatible options selected. Please try again.")
             sys.exit(0)
-
         cmd = self._argsdict["cmd"]
         if cmd == 'clone':
             self._clone_projects()
@@ -93,15 +111,7 @@ class Proctor:
 
 
 if __name__ == "__main__":
-
-    cfg = GitLabConfiguration()
-    server = GitLabServer(cfg.get_server_url())
-    user = GitLabUser(cfg.get_user_private_token())
-    working_dir = cfg.get_proctor_working_dir()
-    app_logger = applogger.AppLogger("proctor-logger", "INFO")
-
-    # Proctor
-    p = Proctor(server, user, working_dir, app_logger)
+    p = Proctor(GitLabConfiguration())
+    p.logger.info("Welcome to Proctor!")
     p.process_command()
-
-
+    sys.exit(0)
