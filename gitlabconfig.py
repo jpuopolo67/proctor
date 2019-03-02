@@ -11,7 +11,8 @@ class GitLabConfiguration:
     def __init__(self, config_file_path=None):
         """Initializes the configuration based on the .proctor.cfg file."""
         self._config_file = self._get_config_file_path(config_file_path)
-        self._load_config_settings_from_file()
+        self._cfg = configparser.ConfigParser()
+        self._cfg.read(self._config_file)
 
     def _get_config_file_path(self, config_file_path):
         """Find the path to Proctor's configuration file."""
@@ -36,21 +37,15 @@ class GitLabConfiguration:
                                 "working directory or your home directory.".format(
                                 GitLabConfiguration._DEFAULT_CONFIG_FILE))
 
-    def _load_config_settings_from_file(self):
-        """Reads the configuration file."""
-        cfg = configparser.ConfigParser()
-        cfg.read(self._config_file)
-        self._proctor_working_dir = cfg['Proctor']['working_dir']
-        self._gitlab_server_url = cfg['GitLabServer']['url']
-        self._gitlab_user_private_token = cfg['GitLabUser']['private_token']
-
-    def get_server_url(self):
-        return self._gitlab_server_url
-
-    def get_user_private_token(self):
-        return self._gitlab_user_private_token
-
     def get_proctor_working_dir(self):
-        return self._proctor_working_dir
+        """Returns where Proctor writes logs, clones git projects, etc."""
+        # Make sure the working dir path ends in / to properly indicate a directory
+        working_dir = self.get_config_value('Proctor', 'working_dir')
+        if not working_dir.endswith(os.sep):
+            working_dir = working_dir + os.sep
+        return working_dir
+
+    def get_config_value(self, section, key):
+        return self._cfg.get(section, key)
 
 
