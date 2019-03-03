@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import shutil
 
-
 class GitLabServer:
     """Abstracts the GitLab server that contains our users, groups, and projects."""
     _GITLAB_API_VERSION = 3

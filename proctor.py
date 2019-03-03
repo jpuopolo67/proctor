@@ -39,8 +39,7 @@ class Proctor:
 
     def _init_logger(self):
         self.logger = plogger.ProctorLogger('proctor',
-                                            self._cfg.get_config_value('Proctor', 'log_level'),
-                                            self._cfg.get_config_value('Proctor', 'log_to_console'),
+                                            self._cfg.get_config_value('Proctor', 'console_log_level'),
                                             self._working_dir_name,
                                             self._cfg.get_config_value('Proctor', 'logfile_name'))
 
@@ -112,6 +111,9 @@ class Proctor:
 
 if __name__ == "__main__":
     p = Proctor(GitLabConfiguration())
-    p.logger.info("Welcome to Proctor!")
+    p.logger.debug("This is a DEBUG message")
+    p.logger.info("This is an INFO message")
+    p.logger.warning("This is a WARNING message")
+    p.logger.error("This is an ERROR message")
     p.process_command()
     sys.exit(0)

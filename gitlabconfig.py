@@ -46,6 +46,11 @@ class GitLabConfiguration:
         return working_dir
 
     def get_config_value(self, section, key):
-        return self._cfg.get(section, key)
+        try:
+            value = self._cfg.get(section, key)
+        except:
+            value = None
+        return value
+
 
 
