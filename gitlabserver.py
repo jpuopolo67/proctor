@@ -4,6 +4,7 @@ import gitlab.v3.objects
 import os
 from pathlib import Path
 import shutil
+import logging
 
 class GitLabServer:
     """Abstracts the GitLab server that contains our users, groups, and projects."""
@@ -23,6 +24,7 @@ class GitLabServer:
     def __init__(self, server_url, api_version=_GITLAB_API_VERSION):
         self._url = server_url
         self._api_version = api_version
+        self._logger = logging.getLogger("proctor")
 
     def login(self, user):
         self._server = gitlab.Gitlab(url=self._url,
@@ -38,6 +40,10 @@ class GitLabServer:
         project_path = GitLabServer.build_project_path(owner_email, project_name)
         try:
             project = self._server.projects.get(project_path)
+            commits = project.commits.list()
+            for commits in commits:
+                #self._logger.info("Valid commits found. TODO:process")
+                pass
             return project
         except:
             return None
@@ -62,16 +68,16 @@ class GitLabServer:
         return projects
 
     def clone_project(self, gitlab_project, dest_path_name, force=False):
-        dest_path = Path(dest_path_name)
+
         try:
-            http_url = gitlab_project.http_url_to_repo
-            print('Cloning repo {}...{}'.format(http_url, "(FORCED)" if force else ''))
+            dest_path = Path(dest_path_name)
             self._init_dest_path(dest_path, force)
-            shell_cmd = 'git clone {repo} {dest_dir}'.format(
-                                   repo=http_url, dest_dir=str(dest_path))
+            http_url = gitlab_project.http_url_to_repo
+            self._logger.info('Cloning repo {}...{}'.format(http_url, "(FORCED)" if force else ''))
+            shell_cmd = 'git clone {repo} {dest_dir}'.format(repo=http_url, dest_dir=str(dest_path))
             os.system(shell_cmd)
         except FileExistsError as fex:
-            print(fex)
+            self._logger.warning(fex)
 
     def _init_dest_path(self, dest_path, force):
         if not dest_path.exists():
@@ -81,7 +87,7 @@ class GitLabServer:
             dest_path.mkdir(parents=True, exist_ok=True)
             return
 
-        errmsg = "FAILED: Destination directory '{}' already exists. " \
+        errmsg = "SKIPPED: Destination directory '{}' already exists. " \
                  "Use --force to overwrite.".format(dest_path)
         raise FileExistsError(errmsg)
 

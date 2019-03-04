@@ -22,7 +22,7 @@ class Proctor:
         :return File system path name."""
 
         owner_dir_name = GitLabServer.build_project_path(email, project_name)
-        dest_path_name ="{}/{}".format(working_dir, owner_dir_name)
+        dest_path_name ="{}{}".format(working_dir, owner_dir_name)
         return dest_path_name
 
     def __init__(self, cfg):
@@ -32,6 +32,11 @@ class Proctor:
         self._init_args()
         self._init_server()
         self._init_logger()
+
+        # Log the fact that we're starting
+        banner = '=' * 40
+        self.logger.info(banner)
+        self.logger.info("Proctor")
 
         # As a final step, log into the server
         self._server.login(self._user)
@@ -46,6 +51,7 @@ class Proctor:
 
     def _init_working_dir(self):
         self._working_dir_name = self._cfg.get_proctor_working_dir()
+
 
     def _init_args(self):
         """Helper method that initializes initializes program args"""
@@ -84,7 +90,7 @@ class Proctor:
         """Process the command entered. This method acts as a junction, dispatching
         calls to appropriate handler functions to complete the work."""
         if not self._are_args_valid():
-            print("Invalid command or incompatible options selected. Please try again.")
+            self.logger.warning("Invalid command or incompatible options selected. Please try again.")
             sys.exit(0)
         cmd = self._argsdict["cmd"]
         if cmd == 'clone':
@@ -102,18 +108,19 @@ class Proctor:
         project_name = self._argsdict["project"]
 
         # Clone 'em
+        self.logger.info("Cloning project: {}".format(project_name))
         force = self._args.force
         for email in owner_emails:
+            self.logger.info("Attemping to retrieve project for {}".format(email))
             gitlab_project = self._server.get_user_project(email, project_name)
-            dest_path_name = Proctor.build_dest_path_name(self._working_dir_name, email, project_name)
-            self._server.clone_project(gitlab_project, dest_path_name, force)
+            if gitlab_project:
+                dest_path_name = Proctor.build_dest_path_name(self._working_dir_name, email, project_name)
+                self._server.clone_project(gitlab_project, dest_path_name, force)
+            else:
+                self.logger.warning(f"NOT FOUND: {email}. Check email address.")
 
 
 if __name__ == "__main__":
     p = Proctor(GitLabConfiguration())
-    p.logger.debug("This is a DEBUG message")
-    p.logger.info("This is an INFO message")
-    p.logger.warning("This is a WARNING message")
-    p.logger.error("This is an ERROR message")
     p.process_command()
     sys.exit(0)
