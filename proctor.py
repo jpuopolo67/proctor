@@ -16,6 +16,12 @@ class Proctor:
     are written in Java and use JUnit3 as the testing framework. Future versions of Proctor may
     enable the language-under-test and the unit testing pluggable."""
 
+    #TODO: Add gradebook option(s) to configuration file
+    #TODO: As part of grading, create gradebook
+    #TODO: Write "test finder" to find JUnit tests in assignment directories
+    #TODO: Run JUnit tests that are part of the project and capture output for parsing
+    #TODO: Add ability to run JUnit test that outside the project
+    
     _valid_cmds = ('clone', 'grade')
     _required_opts = {'clone': {'project', 'emails'},
                       'grade': {'project', 'emails'}}
@@ -135,23 +141,22 @@ class Proctor:
             is_ontime, days, hours, mins = self._get_dt_diff_human_readable(project_due_date, latest_commit_date)
             pass
 
+
     def _get_dt_diff_human_readable(self, project_due_date, latest_commit_date):
 
         # Exmaple of project date returned from server: 2019-03-03T23:39:40.000-05:00
         dt_due = dt.strptime(project_due_date, "%Y-%m-%dT%H:%M:%S%z")
 
-        # Remove last : so that strptime can parse correcly
+        # Remove last ':' so that strptime can parse correcly
         latest_commit_date = latest_commit_date[::-1].replace(':', '', 1)[::-1]
         dt_latest = dt.strptime(latest_commit_date, "%Y-%m-%dT%H:%M:%S.%f%z")
 
-        # Get the difference and return a tuple in days, hrs, mins
+        # Get the datetime difference and return a tuple in days, hrs, mins
         date_diff = dt_due - dt_latest
         total_sec = date_diff.total_seconds()
-
         is_ontime = total_sec >= 0
         total_sec = abs(total_sec)
         days, hours, mins = self._convert_secs_to_days_hrs_mins(total_sec)
-
         return (is_ontime, days, hours, mins)
 
 

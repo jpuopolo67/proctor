@@ -7,6 +7,7 @@ import logging
 import os
 from pathlib import Path
 
+
 class GitLabServer:
     """Abstracts the GitLab server that contains our users, groups, and projects."""
     _GITLAB_API_VERSION = 3
@@ -21,20 +22,24 @@ class GitLabServer:
         repo_name = os.sep.join([repo_name, project_name])
         return repo_name
 
+
     def __init__(self, server_url, api_version=_GITLAB_API_VERSION):
         self._url = server_url
         self._api_version = api_version
         self._logger = logging.getLogger("proctor")
+
 
     def login(self, user):
         self._server = gitlab.Gitlab(url=self._url,
                                      private_token=user.get_private_token(),
                                      api_version=str(self._api_version))
 
+
     def whoami(self):
         self._server.auth() #required to make next line work!
         current_user = self._server.user
         return current_user
+
 
     def get_user_project(self, owner_email, project_name):
         try:
@@ -44,6 +49,7 @@ class GitLabServer:
             return project
         except:
             return None
+
 
     def get_user_from_email(self, email):
         users = self._server.users.list(search=email)
@@ -57,12 +63,15 @@ class GitLabServer:
         errmsg = "Ambiguous email '{}'. Try again with a more specific email.".format(email)
         raise ValueError(errmsg)
 
+
     def get_user_by_id(self, userid):
         return self._server.users.get(userid)
+
 
     def get_projects_named(self, project_name):
         projects = self._server.projects.list(search=project_name, all=True)
         return projects
+
 
     def clone_project(self, gitlab_project, dest_path_name, force=False):
 
@@ -78,6 +87,7 @@ class GitLabServer:
         except FileExistsError as fex:
             self._logger.warning(fex)
 
+
     def _init_dest_path(self, dest_path, force):
         if not dest_path.exists():
             dest_path.mkdir(parents=True)
@@ -90,6 +100,3 @@ class GitLabServer:
         errmsg = "SKIPPED: Destination directory '{}' already exists. " \
                  "Use --force to overwrite.".format(dest_path)
         raise FileExistsError(errmsg)
-
-
-
