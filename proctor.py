@@ -6,6 +6,7 @@ import argparse
 import plogger
 import sys
 import os
+from pathlib import Path
 
 
 class Proctor:
@@ -14,16 +15,17 @@ class Proctor:
     are written in Java and use JUnit3 as the testing framework. Future versions of Proctor may
     enable the language-under-test and the unit testing pluggable."""
 
-    _valid_cmds = ('clone', )
-    _required_opts = {'clone': {'project', 'emails'}}
+    _valid_cmds = ('clone', 'grade')
+    _required_opts = {'clone': {'project', 'emails'},
+                      'grade': {'project', 'emails'}}
 
     @staticmethod
     def build_dest_path_name(working_dir, email, project_name):
         """Builds a file system path name from component parts.
         :return File system path name."""
 
-        owner_dir_name = GitLabServer.build_project_path(project_name, email)
-        dest_path_name ="{}{}{}{}".format(working_dir, project_name, os.sep, email)
+        owner_dir_name = GitLabServer.build_server_project_path(project_name, email)
+        dest_path_name = os.sep.join([working_dir, project_name, email])
         return dest_path_name
 
     def __init__(self, cfg):
@@ -95,30 +97,50 @@ class Proctor:
             sys.exit(0)
         cmd = self._argsdict["cmd"]
         if cmd == 'clone':
-            self._clone_projects()
+            self._clone_project()
+        elif cmd == 'grade':
+            self._grade_project()
+        else:
+            self.logger.error(f"Unknown command '{cmd}'. Valid commands are: clone, grade")
+            sys.exit(0)
 
 
-    def _clone_projects(self):
-        """Clones one or more projects from the GitLab server."""
+    def _grade_project(self):
+        """Grades the given project for each email in the specified email file.
+        Projects are expected to have been cloned to a local repository previously."""
+        owner_emails = self._get_emails_from_file(self._argsdict['emails'])
+        project_name = self._argsdict['project']
+        project_dir = os.sep.join([self._working_dir_name, project_name])
 
-        # Get the list of project owners to clone
-        email_file = self._argsdict["emails"]
+        for email in owner_emails:
+            dir_to_grade = Path(os.sep.join([project_dir, email]))
+            self.logger.info("Attempting to grade: {}".format(dir_to_grade))
+
+
+
+    def _get_emails_from_file(self, email_file):
+        """Returns a list of emails from the given file."""
         owner_emails = GitLabUser.get_emails(email_file)
+        project_name = self._argsdict['project']
+        return owner_emails
 
-        # Convenience variable
-        project_name = self._argsdict["project"]
+
+    def _clone_project(self):
+        """Clones a given project for each email in the specified email file."""
+        owner_emails = self._get_emails_from_file(self._argsdict['emails'])
+        project_name = self._argsdict['project']
 
         # Clone 'em
-        self.logger.info("Cloning project: {}".format(project_name))
+        self.logger.info('Cloning project: {}'.format(project_name))
         force = self._args.force
         for email in owner_emails:
-            self.logger.info("Attemping to retrieve project for {}".format(email))
+            self.logger.info('Attemping to retrieve project for {}'.format(email))
             gitlab_project = self._server.get_user_project(email, project_name)
             if gitlab_project:
                 dest_path_name = Proctor.build_dest_path_name(self._working_dir_name, email, project_name)
                 self._server.clone_project(gitlab_project, dest_path_name, force)
             else:
-                self.logger.warning(f"NOT FOUND: {email}. Check email address.")
+                self.logger.warning(f'NOT FOUND: {email}. Check email address.')
 
 
 if __name__ == "__main__":

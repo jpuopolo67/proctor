@@ -39,10 +39,9 @@ class GitLabConfiguration:
 
     def get_proctor_working_dir(self):
         """Returns where Proctor writes logs, clones git projects, etc."""
-        # Make sure the working dir path ends in / to properly indicate a directory
         working_dir = self.get_config_value('Proctor', 'working_dir')
-        if not working_dir.endswith(os.sep):
-            working_dir = working_dir + os.sep
+        if working_dir.endswith(os.sep):
+            working_dir = working_dir[:-1]
         return working_dir
 
     def get_config_value(self, section, key):

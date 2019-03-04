@@ -2,6 +2,7 @@
 import logging
 import termcolor
 import sys
+import os
 
 
 class ProctorLogger:
@@ -19,7 +20,7 @@ class ProctorLogger:
             self._log_level = getattr(logging, console_log_level)
             self._logfile_name = None
             if logfile_name is not None and len(logfile_name) > 0:
-                self._logfile_name = proctor_working_dir + logfile_name
+                self._logfile_name = os.sep.join([proctor_working_dir, logfile_name])
 
             # Access proctor logger, set the log level as "DEBUG" to make sure
             # all log messages are forwarded to handlers

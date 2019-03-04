@@ -1,24 +1,24 @@
 
 import gitlab.v3
 import gitlab.v3.objects
-import os, subprocess
-from pathlib import Path
+import subprocess
 import shutil
 import logging
+import os
+from pathlib import Path
 
 class GitLabServer:
     """Abstracts the GitLab server that contains our users, groups, and projects."""
     _GITLAB_API_VERSION = 3
 
     @staticmethod
-    def build_project_path(project_name, owner_email):
+    def build_server_project_path(project_name, owner_email):
         """Builds a repo name by stripping domain from email, adding / and appending the
         project name, e.g., myname/myrepo"""
-
         repo_name = owner_email
         if '@' in owner_email:
             repo_name = owner_email.split('@')[0]
-        repo_name = '{}/{}'.format(repo_name, project_name)
+        repo_name = os.sep.join([repo_name, project_name])
         return repo_name
 
     def __init__(self, server_url, api_version=_GITLAB_API_VERSION):
@@ -37,8 +37,9 @@ class GitLabServer:
         return current_user
 
     def get_user_project(self, owner_email, project_name):
-        project_path = GitLabServer.build_project_path(project_name, owner_email)
         try:
+            project_path = GitLabServer.build_server_project_path(project_name, owner_email)
+            self._logger.info(f'Server path => {project_path}')
             project = self._server.projects.get(project_path)
             commits = project.commits.list()
             for commits in commits:
