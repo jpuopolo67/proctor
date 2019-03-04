@@ -39,12 +39,8 @@ class GitLabServer:
     def get_user_project(self, owner_email, project_name):
         try:
             project_path = GitLabServer.build_server_project_path(project_name, owner_email)
-            self._logger.info(f'Server path => {project_path}')
+            self._logger.info(f'Getting project info from server <= {project_path}')
             project = self._server.projects.get(project_path)
-            commits = project.commits.list()
-            for commits in commits:
-                #self._logger.info("Valid commits found. TODO:process")
-                pass
             return project
         except:
             return None

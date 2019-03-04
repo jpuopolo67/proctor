@@ -6,6 +6,7 @@ import argparse
 import plogger
 import sys
 import os
+from datetime import datetime as dt
 from pathlib import Path
 
 
@@ -108,20 +109,46 @@ class Proctor:
     def _grade_project(self):
         """Grades the given project for each email in the specified email file.
         Projects are expected to have been cloned to a local repository previously."""
+
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         project_name = self._argsdict['project']
         project_dir = os.sep.join([self._working_dir_name, project_name])
+        project_due_date = self._cfg.get_config_value('Projects', project_name)
 
         for email in owner_emails:
             dir_to_grade = Path(os.sep.join([project_dir, email]))
             self.logger.info("Attempting to grade: {}".format(dir_to_grade))
+            project = self._server.get_user_project(email, project_name)
+            if project:
+                commits = project.commits.list()
+                # Based on examining project commits, it looks like the
+                # most recent commit is always the first one in the list.
+                if commits:
+                    latest_commit_date = commits[0].created_at
+                else:
+                    self.logger.warning(f'NO COMMIT. Project found but cannot find a commit.')
+            else:
+                self.logger.warning(f'NOT FOUND: {email}. Project not found. Check email address.')
 
+            self.logger.info("project due: {}, latest_commit: {}".format(project_due_date, latest_commit_date))
 
+            # Exmaple of what's returned from server: 2019-03-03T23:39:40.000-05:00
+            dt_due = dt.strptime(project_due_date, "%Y-%m-%dT%H:%M:%S%z")
+            latest_commit_date = latest_commit_date[::-1].replace(':', '', 1)[::-1]
+            dt_latest = dt.strptime(latest_commit_date, "%Y-%m-%dT%H:%M:%S.%f%z")
+            date_diff = dt_due - dt_latest
+            total_sec = date_diff.total_seconds()
+            mins = total_sec / 60.0
+            hrs = mins / 60.0
+            days = hrs / 24.0
+
+            parts = {'total': total_sec, 'mins': mins, 'hrs': hrs, 'days': days}
+            self.logger.info(parts)
+            pass
 
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file."""
         owner_emails = GitLabUser.get_emails(email_file)
-        project_name = self._argsdict['project']
         return owner_emails
 
 
@@ -134,7 +161,6 @@ class Proctor:
         self.logger.info('Cloning project: {}'.format(project_name))
         force = self._args.force
         for email in owner_emails:
-            self.logger.info('Attemping to retrieve project for {}'.format(email))
             gitlab_project = self._server.get_user_project(email, project_name)
             if gitlab_project:
                 dest_path_name = Proctor.build_dest_path_name(self._working_dir_name, email, project_name)
