@@ -5,6 +5,7 @@ from gitlabuser import GitLabUser
 import argparse
 import plogger
 import sys
+import os
 
 
 class Proctor:
@@ -21,8 +22,8 @@ class Proctor:
         """Builds a file system path name from component parts.
         :return File system path name."""
 
-        owner_dir_name = GitLabServer.build_project_path(email, project_name)
-        dest_path_name ="{}{}".format(working_dir, owner_dir_name)
+        owner_dir_name = GitLabServer.build_project_path(project_name, email)
+        dest_path_name ="{}{}{}{}".format(working_dir, project_name, os.sep, email)
         return dest_path_name
 
     def __init__(self, cfg):

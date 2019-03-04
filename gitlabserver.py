@@ -1,7 +1,7 @@
 
 import gitlab.v3
 import gitlab.v3.objects
-import os
+import os, subprocess
 from pathlib import Path
 import shutil
 import logging
@@ -11,7 +11,7 @@ class GitLabServer:
     _GITLAB_API_VERSION = 3
 
     @staticmethod
-    def build_project_path(owner_email, project_name):
+    def build_project_path(project_name, owner_email):
         """Builds a repo name by stripping domain from email, adding / and appending the
         project name, e.g., myname/myrepo"""
 
@@ -37,7 +37,7 @@ class GitLabServer:
         return current_user
 
     def get_user_project(self, owner_email, project_name):
-        project_path = GitLabServer.build_project_path(owner_email, project_name)
+        project_path = GitLabServer.build_project_path(project_name, owner_email)
         try:
             project = self._server.projects.get(project_path)
             commits = project.commits.list()
@@ -75,13 +75,16 @@ class GitLabServer:
             http_url = gitlab_project.http_url_to_repo
             self._logger.info('Cloning repo {}...{}'.format(http_url, "(FORCED)" if force else ''))
             shell_cmd = 'git clone {repo} {dest_dir}'.format(repo=http_url, dest_dir=str(dest_path))
-            os.system(shell_cmd)
+            result = subprocess.run(['git', 'clone', http_url, str(dest_path)],
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self._logger.info("Cloned successfully")
         except FileExistsError as fex:
             self._logger.warning(fex)
 
     def _init_dest_path(self, dest_path, force):
         if not dest_path.exists():
             dest_path.mkdir(parents=True)
+            return
         if dest_path.exists() and force:
             shutil.rmtree(dest_path)
             dest_path.mkdir(parents=True, exist_ok=True)
