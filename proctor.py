@@ -2,6 +2,8 @@
 from gitlabconfig import GitLabConfiguration
 from gitlabserver import GitLabServer
 from gitlabuser import GitLabUser
+from gradebook import GradeBook
+
 import argparse
 import plogger
 import sys
@@ -21,7 +23,7 @@ class Proctor:
     #TODO: Write "test finder" to find JUnit tests in assignment directories
     #TODO: Run JUnit tests that are part of the project and capture output for parsing
     #TODO: Add ability to run JUnit test that outside the project
-    
+
     _valid_cmds = ('clone', 'grade')
     _required_opts = {'clone': {'project', 'emails'},
                       'grade': {'project', 'emails'}}
@@ -120,6 +122,8 @@ class Proctor:
         project_name = self._argsdict['project']
         project_dir = os.sep.join([self._working_dir_name, project_name])
         project_due_date = self._cfg.get_config_value('Projects', project_name)
+
+        gb = GradeBook(self._working_dir_name, project_name)
 
         for email in owner_emails:
             dir_to_grade = Path(os.sep.join([project_dir, email]))
