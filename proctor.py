@@ -2,14 +2,15 @@
 from gitlabconfig import GitLabConfiguration
 from gitlabserver import GitLabServer
 from gitlabuser import GitLabUser
+from grader import Grader
 from gradebook import GradeBook
-
+from datetime import datetime as dt
+from pathlib import Path
 import argparse
 import plogger
 import sys
 import os
-from datetime import datetime as dt
-from pathlib import Path
+
 
 
 class Proctor:
@@ -123,54 +124,25 @@ class Proctor:
         project_dir = os.sep.join([self._working_dir_name, project_name])
         project_due_date = self._cfg.get_config_value('Projects', project_name)
 
-        gb = GradeBook(self._working_dir_name, project_name)
+        gradebook = GradeBook(self._working_dir_name, project_name)
+        grader = Grader(gradebook)
 
         for email in owner_emails:
             dir_to_grade = Path(os.sep.join([project_dir, email]))
             self.logger.info("Attempting to grade: {}".format(dir_to_grade))
+            if not dir_to_grade.exists():
+                self.logger.warning("NOT FOUND: Target directory {} does not exist.".format(str(dir_to_grade)))
+                continue
             project = self._server.get_user_project(email, project_name)
             if project:
                 commits = project.commits.list()
-                # Based on examining project commits, it looks like the
-                # most recent commit is always the first one in the list.
                 if commits:
-                    latest_commit_date = commits[0].created_at
+                    latest_commit_date = commits[0].created_at  # GitLab returns most recent first (index 0)
+                    grader.grade(email, dir_to_grade, project_due_date, latest_commit_date)
                 else:
-                    self.logger.warning(f'NO COMMIT. Project found but cannot find a commit.')
+                    self.logger.warning('NO COMMIT. Project found but cannot find a commit.')
             else:
-                self.logger.warning(f'NOT FOUND: {email}. Project not found. Check email address.')
-            self.logger.info("project due: {}, latest_commit: {}".format(project_due_date, latest_commit_date))
-
-            # Calculate time differences and report back in human readable form
-            is_ontime, days, hours, mins = self._get_dt_diff_human_readable(project_due_date, latest_commit_date)
-            pass
-
-
-    def _get_dt_diff_human_readable(self, project_due_date, latest_commit_date):
-
-        # Exmaple of project date returned from server: 2019-03-03T23:39:40.000-05:00
-        dt_due = dt.strptime(project_due_date, "%Y-%m-%dT%H:%M:%S%z")
-
-        # Remove last ':' so that strptime can parse correcly
-        latest_commit_date = latest_commit_date[::-1].replace(':', '', 1)[::-1]
-        dt_latest = dt.strptime(latest_commit_date, "%Y-%m-%dT%H:%M:%S.%f%z")
-
-        # Get the datetime difference and return a tuple in days, hrs, mins
-        date_diff = dt_due - dt_latest
-        total_sec = date_diff.total_seconds()
-        is_ontime = total_sec >= 0
-        total_sec = abs(total_sec)
-        days, hours, mins = self._convert_secs_to_days_hrs_mins(total_sec)
-        return (is_ontime, days, hours, mins)
-
-
-    def _convert_secs_to_days_hrs_mins(self, total_sec):
-        days = total_sec // (24 * 3600)
-        total_sec = total_sec % (24 * 3600)
-        hours = total_sec // 3600
-        total_sec %= 3600
-        mins = total_sec // 60
-        return (days, hours, mins)
+                self.logger.warning(f'NOT FOUND: {email}. Project not found on server. Check email address.')
 
 
     def _get_emails_from_file(self, email_file):
