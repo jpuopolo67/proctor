@@ -6,15 +6,26 @@ import os
 
 class Grader:
     """Runs units tests using JUnit and determines the ratio of passed/total, e.g., 10/15"""
-    def __init__(self, gradebook):
+    def __init__(self, cfg, gradebook):
+        self._cfg = cfg
         self._gradebook = gradebook
         self._gradebook.open()
 
-    def grade(self, email, dir_to_grade, project_due_dt, latest_commit_dt):
+    def grade(self, email, project_name, dir_to_grade, project_due_dt, latest_commit_dt):
         """Grades the project for the given project owner as specificed by the email."""
         is_ontime, days, hours, mins = self._get_dt_diff_human_readable(project_due_dt, latest_commit_dt)
 
-        self._gradebook.record_grade(email, project_due_dt, latest_commit_dt, is_ontime, days, hours, mins, 'TBD')
+        self._run_project_unit_tests(project_name, dir_to_grade)
+
+        self._gradebook.record_grade(email, project_due_dt, latest_commit_dt,
+                                     is_ontime, days, hours, mins, 'TBD')
+        pass
+
+
+    def _run_project_unit_tests(self, project_name, dir_to_grade):
+        # find the TestSuite
+        print(f"Run unit tests for {project_name} and dir {dir_to_grade} here!")
+        
         pass
 
 

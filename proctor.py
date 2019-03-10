@@ -119,26 +119,27 @@ class Proctor:
         """Grades the given project for each email in the specified email file.
         Projects are expected to have been cloned to a local repository previously."""
 
-        owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         project_name = self._argsdict['project']
         project_dir = os.sep.join([self._working_dir_name, project_name])
-        project_due_date = self._cfg.get_config_value('Projects', project_name)
+        project_due_dt = self._cfg.get_config_value(project_name, 'due_dt')
 
         gradebook = GradeBook(self._working_dir_name, project_name)
-        grader = Grader(gradebook)
+        grader = Grader(self._cfg, gradebook)
 
+        owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         for email in owner_emails:
             dir_to_grade = Path(os.sep.join([project_dir, email]))
             self.logger.info("Attempting to grade: {}".format(dir_to_grade))
             if not dir_to_grade.exists():
-                self.logger.warning("NOT FOUND: Target directory {} does not exist.".format(str(dir_to_grade)))
+                self.logger.warning("NOT FOUND: Target directory {} does not exist. Try clone."
+                                    .format(str(dir_to_grade)))
                 continue
             project = self._server.get_user_project(email, project_name)
             if project:
                 commits = project.commits.list()
                 if commits:
                     latest_commit_date = commits[0].created_at  # GitLab returns most recent first (index 0)
-                    grader.grade(email, dir_to_grade, project_due_date, latest_commit_date)
+                    grader.grade(email, project_name, dir_to_grade, project_due_dt, latest_commit_date)
                 else:
                     self.logger.warning('NO COMMIT. Project found but cannot find a commit.')
             else:
