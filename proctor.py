@@ -1,5 +1,5 @@
 
-from gitlabconfig import GitLabConfiguration
+from proctorconfig import ProctorConfig
 from gitlabserver import GitLabServer
 from gitlabuser import GitLabUser
 from grader import Grader
@@ -38,9 +38,8 @@ class Proctor:
         dest_path_name = os.sep.join([working_dir, project_name, email])
         return dest_path_name
 
-    def __init__(self, cfg):
+    def __init__(self):
         """Initializes the Proctor"""
-        self._cfg = cfg
         self._init_working_dir()
         self._init_args()
         self._init_server()
@@ -57,13 +56,13 @@ class Proctor:
 
     def _init_logger(self):
         self.logger = plogger.ProctorLogger('proctor',
-                                            self._cfg.get_config_value('Proctor', 'console_log_level'),
+                                            ProctorConfig.get_config_value('Proctor', 'console_log_level'),
                                             self._working_dir_name,
-                                            self._cfg.get_config_value('Proctor', 'logfile_name'))
+                                            ProctorConfig.get_config_value('Proctor', 'logfile_name'))
 
 
     def _init_working_dir(self):
-        self._working_dir_name = self._cfg.get_proctor_working_dir()
+        self._working_dir_name = ProctorConfig.get_proctor_working_dir()
 
 
     def _init_args(self):
@@ -78,8 +77,8 @@ class Proctor:
 
 
     def _init_server(self):
-        self._server = GitLabServer(self._cfg.get_config_value('GitLabServer', 'url'))
-        self._user = GitLabUser(self._cfg.get_config_value('GitLabUser', 'private_token'))
+        self._server = GitLabServer(ProctorConfig.get_config_value('GitLabServer', 'url'))
+        self._user = GitLabUser(ProctorConfig.get_config_value('GitLabUser', 'private_token'))
 
 
     def _are_args_valid(self):
@@ -121,10 +120,10 @@ class Proctor:
 
         project_name = self._argsdict['project']
         project_dir = os.sep.join([self._working_dir_name, project_name])
-        project_due_dt = self._cfg.get_config_value(project_name, 'due_dt')
+        project_due_dt = ProctorConfig.get_config_value(project_name, 'due_dt')
 
         gradebook = GradeBook(self._working_dir_name, project_name)
-        grader = Grader(self._cfg, gradebook)
+        grader = Grader(gradebook)
 
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         for email in owner_emails:
@@ -170,6 +169,7 @@ class Proctor:
 
 
 if __name__ == "__main__":
-    p = Proctor(GitLabConfiguration())
+    ProctorConfig.init()
+    p = Proctor()
     p.process_command()
     sys.exit(0)

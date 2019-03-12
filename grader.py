@@ -1,4 +1,5 @@
 
+from proctorconfig import ProctorConfig
 from gradebook import GradeBook
 from pathlib import Path
 from datetime import datetime as dt
@@ -6,8 +7,7 @@ import os
 
 class Grader:
     """Runs units tests using JUnit and determines the ratio of passed/total, e.g., 10/15"""
-    def __init__(self, cfg, gradebook):
-        self._cfg = cfg
+    def __init__(self, gradebook):
         self._gradebook = gradebook
         self._gradebook.open()
 
@@ -25,7 +25,7 @@ class Grader:
     def _run_project_unit_tests(self, project_name, dir_to_grade):
         # find the TestSuite
         print(f"Run unit tests for {project_name} and dir {dir_to_grade} here!")
-        
+
         pass
 
 

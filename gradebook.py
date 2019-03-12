@@ -29,7 +29,7 @@ class GradeBook:
         if match:
             current_file_version = int(match.groups(1)[0])
             new_file_version = current_file_version + 1
-            spath = spath.replace(str(current_file_version), str(new_file_version))
+            spath = spath.replace(str(f'grades-{current_file_version}'), str(f'grades-{new_file_version}'))
         return Path(spath)
 
     def open(self):
