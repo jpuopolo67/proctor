@@ -175,20 +175,40 @@ if __name__ == "__main__":
 
     path_name = "/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu"
     src_code_path_name = "src/edu/wit/cs/comp1050/"
+    test_code_path_name = src_code_path_name + "tests/"
 
     #path_name = "/Users/johnpuopolo/Adventure/proctor_wd"
     #src_code_path_name = ""
 
     full_path = os.sep.join([path_name, src_code_path_name]) + "*.java"
     java_files = glob.glob(full_path)
-
     p.logger.info("Grading projects")
-    p.logger.info(f'Building {full_path}')
+    p.logger.info(f'Building project source: {full_path}')
     errors = 0
     for src_file in java_files:
         result = subprocess.run(['javac', src_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result_string = "OK" if result.returncode == 0 else "FAILED"
         file_name = Path(src_file).name
+        p.logger.info(f'...{file_name} => {result_string}')
+        errors = errors + result.returncode
+
+    if errors == 0:
+        p.logger.info('Build successful')
+    else:
+        p.logger.error(f'BUILD ERRORS: {errors}.  Build failed.')
+
+    full_path = os.sep.join([path_name, test_code_path_name]) + "*.java"
+    java_files = glob.glob(full_path)
+    p.logger.info(f'Building tests: {full_path}')
+    errors = 0
+    #os.chdir(path_name + "/src")
+    java_classpath = '.:/Users/johnpuopolo/Adventure/proctor_wd/JUnitRunner/lib/junit-4.12.jar:/Users/johnpuopolo/Adventure/proctor_wd/JUnitRunner/lib/hamcrest-core-1.3.jar:'
+    java_classpath = java_classpath + '/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu/src/edu/wit/cs/comp1050'
+    os.chdir('/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu/src')
+    for test_file in java_files:
+        result = subprocess.run(['javac', '-classpath', java_classpath, test_file])# , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result_string = "OK" if result.returncode == 0 else "FAILED"
+        file_name = Path(test_file).name
         p.logger.info(f'...{file_name} => {result_string}')
         errors = errors + result.returncode
 
