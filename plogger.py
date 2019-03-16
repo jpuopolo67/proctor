@@ -9,6 +9,14 @@ class ProctorLogger:
     """Wraps the standard Python logging module and provides a simplifed interface to use
     in the Proctor application."""
 
+    @staticmethod
+    def _format_msg(msg, threshold=200, width=40):
+        final_msg = msg
+        if len(msg) > threshold:
+            left_side = msg[:width]
+            right_side = msg[-width:]
+            final_msg = '...'.join([left_side, right_side])
+        return final_msg
 
     def __init__(self, logger_name, console_log_level, proctor_working_dir, logfile_name):
         self._logger_name = logger_name
@@ -65,4 +73,8 @@ class ProctorLogger:
         return self._log(msg, logging.CRITICAL, *args, **kwargs)
 
     def _log(self, msg, log_level, *args, **kwargs):
-        self._thelogger.log(log_level, msg, *args, **kwargs)
+        the_msg = ProctorLogger._format_msg(msg)
+        self._thelogger.log(log_level, the_msg, *args, **kwargs)
+
+
+

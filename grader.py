@@ -4,6 +4,7 @@ from gradebook import GradeBook
 from pathlib import Path
 from datetime import datetime as dt
 import os
+import subprocess
 
 class Grader:
     """Runs units tests using JUnit and determines the ratio of passed/total, e.g., 10/15"""
@@ -15,6 +16,7 @@ class Grader:
         """Grades the project for the given project owner as specificed by the email."""
         is_ontime, days, hours, mins = self._get_dt_diff_human_readable(project_due_dt, latest_commit_dt)
 
+        self._compile_source(project_name, dir_to_grade)
         self._run_project_unit_tests(project_name, dir_to_grade)
 
         self._gradebook.record_grade(email, project_due_dt, latest_commit_dt,
@@ -22,10 +24,22 @@ class Grader:
         pass
 
 
-    def _run_project_unit_tests(self, project_name, dir_to_grade):
-        # find the TestSuite
-        print(f"Run unit tests for {project_name} and dir {dir_to_grade} here!")
+    def _compile_source(self, project_name, dir_to_grade):
+        # TODO: Compile all source files, capture output, parse to make sure all OK
+        src_path = ProctorConfig.get_config_value(project_name, 'src_path')
+        full_path = dir_to_grade / src_path
 
+        java_files = full_path.rglob("*.java")
+        #result = subprocess.call(['javac', cmd])
+        pass
+
+
+    def _run_project_unit_tests(self, project_name, dir_to_grade):
+        # TODO: Compile all test files
+        # TODO: Run the tests against the compiled source
+        # TODO: Capture test output, parse and evaluate
+
+        print(f"Run unit tests for {dir_to_grade} here!")
         pass
 
 

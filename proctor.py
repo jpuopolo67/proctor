@@ -10,7 +10,8 @@ import argparse
 import plogger
 import sys
 import os
-
+import subprocess
+import glob
 
 
 class Proctor:
@@ -127,10 +128,10 @@ class Proctor:
 
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         for email in owner_emails:
-            dir_to_grade = Path(os.sep.join([project_dir, email]))
-            self.logger.info("Attempting to grade: {}".format(dir_to_grade))
+            dir_to_grade = Path(project_dir) / email
+            self.logger.info('Attempting to grade: {}'.format(dir_to_grade))
             if not dir_to_grade.exists():
-                self.logger.warning("NOT FOUND: Target directory {} does not exist. Try clone."
+                self.logger.warning('NOT FOUND: Target directory {} does not exist. Try clone.'
                                     .format(str(dir_to_grade)))
                 continue
             project = self._server.get_user_project(email, project_name)
@@ -142,7 +143,7 @@ class Proctor:
                 else:
                     self.logger.warning('NO COMMIT. Project found but cannot find a commit.')
             else:
-                self.logger.warning(f'NOT FOUND: {email}. Project not found on server. Check email address.')
+                self.logger.warning('NOT FOUND: Project not found on server. Check email address.')
 
 
     def _get_emails_from_file(self, email_file):
@@ -171,5 +172,30 @@ class Proctor:
 if __name__ == "__main__":
     ProctorConfig.init()
     p = Proctor()
-    p.process_command()
+
+    path_name = "/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu"
+    src_code_path_name = "src/edu/wit/cs/comp1050/"
+
+    #path_name = "/Users/johnpuopolo/Adventure/proctor_wd"
+    #src_code_path_name = ""
+
+    full_path = os.sep.join([path_name, src_code_path_name]) + "*.java"
+    java_files = glob.glob(full_path)
+
+    p.logger.info("Grading projects")
+    p.logger.info(f'Building {full_path}')
+    errors = 0
+    for src_file in java_files:
+        result = subprocess.run(['javac', src_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result_string = "OK" if result.returncode == 0 else "FAILED"
+        file_name = Path(src_file).name
+        p.logger.info(f'...{file_name} => {result_string}')
+        errors = errors + result.returncode
+
+    if errors == 0:
+        p.logger.info('Build successful')
+    else:
+        p.logger.error(f'BUILD ERRORS: {errors}.  Build failed.')
+
+    #p.process_command()
     sys.exit(0)
