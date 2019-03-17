@@ -12,6 +12,8 @@ import sys
 import os
 import subprocess
 import glob
+import re
+
 
 
 class Proctor:
@@ -173,7 +175,7 @@ if __name__ == "__main__":
     ProctorConfig.init()
     p = Proctor()
 
-    path_name = "/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu"
+    path_name = "/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/martinezd2@wit.edu"
     src_code_path_name = "src/edu/wit/cs/comp1050/"
     test_code_path_name = src_code_path_name + "tests/"
 
@@ -203,8 +205,8 @@ if __name__ == "__main__":
     errors = 0
     #os.chdir(path_name + "/src")
     java_classpath = '.:/Users/johnpuopolo/Adventure/proctor_wd/JUnitRunner/lib/junit-4.12.jar:/Users/johnpuopolo/Adventure/proctor_wd/JUnitRunner/lib/hamcrest-core-1.3.jar:'
-    java_classpath = java_classpath + '/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu/src/edu/wit/cs/comp1050'
-    os.chdir('/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu/src')
+    java_classpath = java_classpath + '/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/martinezd2@wit.edu/src/edu/wit/cs/comp1050'
+    os.chdir('/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/martinezd2@wit.edu/src')
     for test_file in java_files:
         result = subprocess.run(['javac', '-classpath', java_classpath, test_file])# , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result_string = "OK" if result.returncode == 0 else "FAILED"
@@ -216,6 +218,14 @@ if __name__ == "__main__":
         p.logger.info('Build successful')
     else:
         p.logger.error(f'BUILD ERRORS: {errors}.  Build failed.')
+
+    # Run the unit tests
+    result = subprocess.run(['java', '-cp', java_classpath, 'org.junit.runner.JUnitCore', 'edu.wit.cs.comp1050.tests.TestSuite'],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    pattern = "Tests run: (\d+),  Failures: (\d+)"
+    sresult = result.stdout.decode('utf-8')
+    m = re.search(pattern, sresult)
 
     #p.process_command()
     sys.exit(0)
