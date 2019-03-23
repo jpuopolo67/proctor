@@ -5,11 +5,13 @@ import os
 
 
 class ProctorLogger:
-    """Wraps the standard Python logging module and provides a simplifed interface to use
-    in the Proctor application."""
+    """Wraps the standard Python logging module and provides a simplified interface to use
+    in the application."""
 
     @staticmethod
     def _format_msg(msg, threshold=200, width=40):
+        """Used to chop out the middle of a long msg for display purposes.
+        :returns Formatted message, with first and last 'width' characters separated by ellipses."""
         final_msg = msg
         if len(msg) > threshold:
             left_side = msg[:width]
@@ -18,10 +20,11 @@ class ProctorLogger:
         return final_msg
 
     def __init__(self, logger_name, console_log_level, proctor_working_dir, logfile_name):
+        """Initializes ProctorLogger."""
         self._logger_name = logger_name
 
         # Converts the logging level string read from the config file into
-        # the associated integer log level value
+        # the associated integer log level value required by logging module
         self._log_level = None
         try:
             self._log_level = getattr(logging, console_log_level)
@@ -34,28 +37,30 @@ class ProctorLogger:
             self._thelogger = logging.getLogger('proctor')
             self._thelogger.setLevel(logging.DEBUG)
 
-            # Patterns for the format of log records
+            # Define output pattern of the log records
             formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)8s | %(message)s')
 
-            # Remove all handlers to that we cleanly install our own based on configuration file
+            # Remove all handlers to that we cleanly install our own based on values from
+            # our configuration file
             self._thelogger.handlers = []
 
-            # Now, depending on the specified configuration, add handlers back
+            # Now, depending on the specified configuration, add handlers back.
             if self._log_level:
                 console_handler = logging.StreamHandler()
-                console_handler.setLevel(self._log_level)
+                console_handler.setLevel(self._log_level)   # define console's log level in config file
                 console_handler.setFormatter(formatter)
                 self._thelogger.addHandler(console_handler)
+
             if self._logfile_name is not None:
                 file_handler = logging.FileHandler(self._logfile_name)
-                file_handler.setLevel(logging.DEBUG)  # all messages logged
+                file_handler.setLevel(logging.DEBUG)        # all messages logged to the log file
                 file_handler.setFormatter(formatter)
                 self._thelogger.addHandler(file_handler)
         except:
             termcolor.cprint("Proctor ERROR: Invalid configuration file format or malformed key.", 'red')
             sys.exit(0)
 
-    # Logging wrappers for ease-of-use
+    # Logging wrappers
     def debug(self, msg, *args, **kwargs):
         return self._log(msg, logging.DEBUG, *args, **kwargs)
 
@@ -72,5 +77,6 @@ class ProctorLogger:
         return self._log(msg, logging.CRITICAL, *args, **kwargs)
 
     def _log(self, msg, log_level, *args, **kwargs):
+        """Format and log given message at the specified log level."""
         the_msg = ProctorLogger._format_msg(msg)
         self._thelogger.log(log_level, the_msg, *args, **kwargs)

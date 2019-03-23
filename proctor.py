@@ -6,30 +6,18 @@ from pathlib import Path
 from pconfig import ProctorConfig
 from gitlabserver import GitLabServer
 from gitlabuser import GitLabUser
+from pathmgr import PathManager
 from grader import Grader
 from gradebook import GradeBook
 from builder import Builder
 
 
 class Proctor:
-    """Proctor enables WIT instuctors to clone, build, test and grade assignments, labs, and
-    projects. It makes the WIT instructor's life a dream. Proctor assumes the projects are test
-    are written in Java and use JUnit3 as the testing framework. Future versions of Proctor may
-    enable the language-under-test and the unit testing pluggable."""
+    """Proctor enables WIT instructors to clone, build, test and grade Java-based projects."""
 
-    # TODO: Add ability to run JUnit test that outside the project
     _valid_cmds = ('clone', 'grade')
     _required_opts = {'clone': {'project', 'emails'},
                       'grade': {'project', 'emails'}}
-
-    @staticmethod
-    def build_dest_path_name(working_dir, email, project_name):
-        """Builds a file system path name from component parts.
-        :return File system path name."""
-
-        owner_dir_name = GitLabServer.build_server_project_path(project_name, email)
-        dest_path_name = os.sep.join([working_dir, project_name, email])
-        return dest_path_name
 
     def __init__(self):
         """Initializes the Proctor"""
@@ -47,16 +35,18 @@ class Proctor:
         self._server.login(self._user)
 
     def _init_logger(self):
+        """Initializes the Proctor logger."""
         self.logger = plogger.ProctorLogger('proctor',
                                             ProctorConfig.get_config_value('Proctor', 'console_log_level'),
                                             self._working_dir_name,
                                             ProctorConfig.get_config_value('Proctor', 'logfile_name'))
 
     def _init_working_dir(self):
+        """Initializes the app's working directory. This is the root of all application operations."""
         self._working_dir_name = ProctorConfig.get_proctor_working_dir()
 
     def _init_args(self):
-        """Helper method that initializes initializes program args"""
+        """Helper method that initializes program args and confirms proper usage."""
         self._argparser = argparse.ArgumentParser()
         self._argparser.add_argument("cmd", help="command for Proctor to execute: clone (initgb, grade, regrade)")
         self._argparser.add_argument("--project", help="name of the assignment, lab or project")
@@ -67,12 +57,13 @@ class Proctor:
         self._argsdict = vars(self._args)
 
     def _init_server(self):
+        """Sets the server endpoint and user token that we'll use to log in."""
         self._server = GitLabServer(ProctorConfig.get_config_value('GitLabServer', 'url'))
         self._user = GitLabUser(ProctorConfig.get_config_value('GitLabUser', 'private_token'))
 
     def _are_args_valid(self):
-        """Ensures the program was run with a valid command and valid args supporting that command.
-        :return True is all args and switches are valid and compatible."""
+        """Ensures the program runs with valid command and args.
+        :return True if command, args and switches are valid and compatible."""
 
         # Valid command?
         cmd = self._args.cmd
@@ -87,7 +78,7 @@ class Proctor:
         return True
 
     def process_command(self):
-        """Process the command entered. This method acts as a junction, dispatching
+        """Process the user-specified command. This method acts as a junction, dispatching
         calls to appropriate handler functions to complete the work."""
         if not self._are_args_valid():
             self.logger.warning("Invalid command or incompatible options selected. Please try again.")
@@ -103,7 +94,8 @@ class Proctor:
 
     def _grade_project(self):
         """Grades the given project for each email in the specified email file.
-        Projects are expected to have been cloned to a local repository previously."""
+        Projects are expected to have been cloned previously to a local repository.
+        Results in gradebook file saved to project's working directory."""
 
         project_name = self._argsdict['project']
         project_dir = os.sep.join([self._working_dir_name, project_name])
@@ -129,7 +121,7 @@ class Proctor:
                     latest_commit_date = commits[0].created_at  # GitLab returns most recent first (index 0)
                     grader.grade(email, project_name, dir_to_grade, project_due_dt, latest_commit_date)
                 else:
-                    gradebook.no_commit_found(email)
+                    gradebook.commit_not_found(email)
                     self.logger.warning('NO COMMIT. Project found but cannot find a commit.')
             else:
                 gradebook.server_project_not_found(email)
@@ -146,7 +138,7 @@ class Proctor:
         return owner_emails
 
     def _clone_project(self):
-        """Clones a given project for each email in the specified email file."""
+        """Clones the given project for each email in the specified email file."""
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         if owner_emails is None:
             self.logger.error("Cannot clone projects without valid emails. Exiting.")
@@ -160,7 +152,7 @@ class Proctor:
         for email in owner_emails:
             gitlab_project = self._server.get_user_project(email, project_name)
             if gitlab_project:
-                dest_path_name = Proctor.build_dest_path_name(self._working_dir_name, email, project_name)
+                dest_path_name = PathManager.build_dest_path_name(self._working_dir_name, email, project_name)
                 self._server.clone_project(gitlab_project, dest_path_name, force)
             else:
                 self.logger.warning(f'NOT FOUND: {email}. Check email address.')

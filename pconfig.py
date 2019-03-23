@@ -12,13 +12,15 @@ class ProctorConfig:
 
     @staticmethod
     def init(config_file_path=None):
-        """Initializes the configuration based on the .proctor.cfg file."""
+        """Initializes the configuration based on the default configuration file."""
         config_file = ProctorConfig._get_config_file_path(config_file_path)
         ProctorConfig.CONFIG.read(config_file)
 
     @staticmethod
     def _get_config_file_path(config_file_path):
-        """Find the path to Proctor's configuration file."""
+        """Finds the path to Proctor's configuration file.
+        :returns Path to the application's configuration file.
+        :raises FileNotFoundError if configuration file cannot be found."""
 
         # If the caller supplied the config file, return it right away
         if config_file_path is not None:
@@ -42,7 +44,8 @@ class ProctorConfig:
 
     @staticmethod
     def get_proctor_working_dir():
-        """Returns where Proctor writes logs, clones git projects, etc."""
+        """Returns where Proctor writes logs, clones git projects, etc.
+        :returns Name of the application's working directory."""
         working_dir = ProctorConfig.get_config_value('Proctor', 'working_dir')
         if working_dir.endswith(os.sep):
             working_dir = working_dir[:-1]
@@ -50,10 +53,12 @@ class ProctorConfig:
 
     @staticmethod
     def get_config_value(section, key):
+        """Returns the value of the given configuation section's key. Intelligently expands {placeholders}.
+        :returns Value of the given configuration section's key."""
         try:
             value = ProctorConfig.CONFIG.get(section, key)
 
-            # If 'value' contains {section.key}, replace it with the value
+            # If 'value' contains {section.key}, replace with the value
             # found in [section] key of the config file.
             pattern = '\{([^}]+)\}'
             matches = re.findall(pattern, value)
