@@ -1,16 +1,14 @@
+import argparse
+import plogger
+import sys
+import os
+from pathlib import Path
 from pconfig import ProctorConfig
 from gitlabserver import GitLabServer
 from gitlabuser import GitLabUser
 from grader import Grader
 from gradebook import GradeBook
-from pathlib import Path
-import argparse
-import plogger
-import sys
-import os
-import subprocess
-import glob
-import re
+from builder import Builder
 
 
 class Proctor:
@@ -112,14 +110,15 @@ class Proctor:
         project_due_dt = ProctorConfig.get_config_value(project_name, 'due_dt')
 
         gradebook = GradeBook(self._working_dir_name, project_name, project_due_dt)
-        grader = Grader(gradebook)
+        builder = Builder()
+        grader = Grader(builder, gradebook)
 
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         for email in owner_emails:
             dir_to_grade = Path(project_dir) / email
-            self.logger.info('Attempting to grade: {}'.format(dir_to_grade))
+            self.logger.info('Grading: {}'.format(dir_to_grade))
             if not dir_to_grade.exists():
-                self.logger.warning('NOT FOUND: Target directory {} does not exist. Try clone.'
+                self.logger.warning('NOT FOUND: {} does not exist. Try clone.'
                                     .format(str(dir_to_grade)))
                 gradebook.local_project_not_found(email)
                 continue
@@ -136,7 +135,7 @@ class Proctor:
                 gradebook.server_project_not_found(email)
                 self.logger.warning('NOT FOUND: Project not found on server. Check email address.')
 
-        self.logger.info('Saving grades.')
+        self.logger.info(f'Saving grades to: {gradebook.get_file_name()}')
         gradebook.save()
 
     def _get_emails_from_file(self, email_file):

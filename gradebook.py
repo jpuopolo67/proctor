@@ -25,6 +25,9 @@ class GradeBook:
             path = self._get_next_file_name(path)
         return str(path)
 
+    def get_file_name(self):
+        return self._file_name
+
     def local_project_not_found(self, email):
         self._record_grade_not_found(email, 'Project not found locally. Cloned correctly?')
 
