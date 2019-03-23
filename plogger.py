@@ -35,7 +35,7 @@ class ProctorLogger:
             self._thelogger.setLevel(logging.DEBUG)
 
             # Patterns for the format of log records
-            formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)10s | %(message)s')
+            formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)8s | %(message)s')
 
             # Remove all handlers to that we cleanly install our own based on configuration file
             self._thelogger.handlers = []

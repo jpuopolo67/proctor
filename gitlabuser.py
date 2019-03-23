@@ -2,8 +2,12 @@ class GitLabUser:
 
     @staticmethod
     def get_emails(fromfile):
-        with open(fromfile) as file:
-            emails = file.read().splitlines()
+        emails = None
+        try:
+            with open(fromfile) as file:
+                emails = file.read().splitlines()
+        except FileNotFoundError:
+            pass
         return emails
 
     def __init__(self, private_token):

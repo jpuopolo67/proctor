@@ -136,14 +136,23 @@ class Proctor:
                 gradebook.server_project_not_found(email)
                 self.logger.warning('NOT FOUND: Project not found on server. Check email address.')
 
+        self.logger.info('Saving grades.')
+        gradebook.save()
+
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file."""
         owner_emails = GitLabUser.get_emails(email_file)
+        if owner_emails is None:
+            self.logger.error(f'EMAIL FILE {email_file} NOT FOUND. Check the path.')
         return owner_emails
 
     def _clone_project(self):
         """Clones a given project for each email in the specified email file."""
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
+        if owner_emails is None:
+            self.logger.error("Cannot clone projects without valid emails. Exiting.")
+            sys.exit(-1)
+
         project_name = self._argsdict['project']
 
         # Clone 'em

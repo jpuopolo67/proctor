@@ -47,7 +47,7 @@ class Grader:
         self._logger.info(f'Running unit test harness {email}{os.sep}{project_name}{os.sep}{test_class_name}')
 
         src_dir = PathManager.get_project_src_dir_name(project_name)
-        path_dir = os.sep.join([dir_to_grade, src_dir])
+        path_dir = os.sep.join([str(dir_to_grade), src_dir])
         full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}', junit_cp=None)
 
         tests_package = PathManager.get_project_tests_package(project_name)
@@ -103,7 +103,7 @@ class Grader:
     def _compile_unit_tests(self, project_name, dir_to_grade):
         unit_test_file_names = self._get_unit_test_file_names(project_name, dir_to_grade)
         src_dir = PathManager.get_project_src_dir_name(project_name)
-        path_dir = os.sep.join([dir_to_grade, src_dir])
+        path_dir = os.sep.join([str(dir_to_grade), src_dir])
         full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}', junit_cp=None)
 
         build_errors = 0
@@ -140,7 +140,7 @@ class Grader:
         src_dir_name = PathManager.get_project_src_dir_name(project_name)
         files_package = fn_package(project_name)
         files_path = PathManager.package_name_to_path_name(files_package)
-        full_path = os.sep.join([dir_to_grade, src_dir_name, files_path])
+        full_path = os.sep.join([str(dir_to_grade), src_dir_name, files_path])
         file_names = glob.glob(os.sep.join([full_path, pattern]))
         return file_names
 
