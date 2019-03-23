@@ -4,6 +4,7 @@ class GitLabUser:
     @staticmethod
     def get_emails(fromfile):
         """Fetches a list of emails from the given file.
+        :param fromfile: Path name to file containing list of emails
         :returns List of email addresses parsed from the given file. None on error."""
         emails = None
         try:
@@ -14,7 +15,8 @@ class GitLabUser:
         return emails
 
     def __init__(self, private_token):
-        """Initializes the GitLabUser."""
+        """Initializes the GitLabUser.
+        :param private_token: User's private token used to access the GitLab server."""
         self._private_token = private_token
 
     def get_private_token(self):

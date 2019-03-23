@@ -95,7 +95,7 @@ class Proctor:
     def _grade_project(self):
         """Grades the given project for each email in the specified email file.
         Projects are expected to have been cloned previously to a local repository.
-        Results in gradebook file saved to project's working directory."""
+        Results in the gradebook file saved to the project's working directory."""
 
         project_name = self._argsdict['project']
         project_dir = os.sep.join([self._working_dir_name, project_name])
@@ -131,7 +131,9 @@ class Proctor:
         gradebook.save()
 
     def _get_emails_from_file(self, email_file):
-        """Returns a list of emails from the given file."""
+        """Returns a list of emails from the given file.
+        :param email_file: Path to the file that contains project-owner email addresses.
+        :returns: List of emails from the given email file."""
         owner_emails = GitLabUser.get_emails(email_file)
         if owner_emails is None:
             self.logger.error(f'EMAIL FILE {email_file} NOT FOUND. Check the path.')

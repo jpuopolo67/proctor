@@ -12,13 +12,17 @@ class ProctorConfig:
 
     @staticmethod
     def init(config_file_path=None):
-        """Initializes the configuration based on the default configuration file."""
+        """Initializes the configuration based on the default configuration file.
+        :param config_file_path: Path to the application's configuration file. If None, will check the user's
+        home directory, followed by Proctor's working directory, for the configuration file."""
         config_file = ProctorConfig._get_config_file_path(config_file_path)
         ProctorConfig.CONFIG.read(config_file)
 
     @staticmethod
     def _get_config_file_path(config_file_path):
         """Finds the path to Proctor's configuration file.
+        :param config_file_path: Path to the application's configuration file. If None, will check the user's
+        home directory, followed by Proctor's working directory, for the configuration file.
         :returns Path to the application's configuration file.
         :raises FileNotFoundError if configuration file cannot be found."""
 
@@ -53,7 +57,9 @@ class ProctorConfig:
 
     @staticmethod
     def get_config_value(section, key):
-        """Returns the value of the given configuation section's key. Intelligently expands {placeholders}.
+        """Returns the value of the given configuration [section] key. Intelligently expands {placeholders}.
+        :param section: Section of the configuration file from which to read the key's value.
+        :param key: Key in the section from which to retrieve the value.
         :returns Value of the given configuration section's key."""
         try:
             value = ProctorConfig.CONFIG.get(section, key)

@@ -12,13 +12,20 @@ class Grader:
     """Runs units tests using JUnit and determines the ratio of passed/total, e.g., 10/15"""
 
     def __init__(self, builder, gradebook):
-        """Initializes the Grader."""
+        """Initializes the Grader.
+        :param builder: Builder instance that compiles Java source and tests.
+        :param gradebook: GradeBook the records and saves the grades per application run."""
         self._logger = logging.getLogger("proctor")
         self._builder = builder
         self._gradebook = gradebook
 
     def grade(self, email, project_name, dir_to_grade, project_due_dt, latest_commit_dt):
-        """Grades a project for the specified user (email)."""
+        """Grades a project for the specified owner (email).
+        :param email: Project owner's email
+        :param project_name: Name of the project being graded
+        :param dir_to_grade: Root of directory tree containing project files
+        :param project_due_dt: Project due datetime in UTC
+        :param latest_commit_dt: Project's most recent commit datetime from server in UTC"""
 
         # Determines if the project is on time based on due datetime vs. latest commit datetime
         # All datetimes in UTC
@@ -50,7 +57,12 @@ class Grader:
         self._gradebook.record_grade(grade_info)
 
     def _run_project_unit_tests(self, email, project_name, dir_to_grade, test_class_name):
-        """Runs the project's unit test. Assumes JUnit as testing framework."""
+        """Runs the project's unit test. Assumes JUnit as testing framework.
+        :param email: Project owner's email
+        :param project_name: Project being graded
+        :param dir_to_grade: Root of directory tree where project files live
+        :param test_class_name: Name of the JUnit test suite, e.g., TestSuite, sans the .class extention
+        :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
         self._logger.info(f'Running tests: {email}{os.sep}{project_name}{os.sep}{test_class_name}')
 
         # Determine proper paths
@@ -91,6 +103,8 @@ class Grader:
 
     def _get_dt_diff_human_readable(self, project_due_date, latest_commit_date):
         """Calculates the difference between project due date and user's latest commit date.
+        :param project_due_date: Project due datetime in UTC
+        :param latest_commit_date: Project's latest commit date on the server in UTC
         :returns Date difference in human-readable parts."""
 
         # All dates assumes UTC. Exmaple of project date returned from server: 2019-03-03T23:39:40.000-05:00
@@ -108,7 +122,8 @@ class Grader:
 
     def _convert_secs_to_days_hrs_mins(self, total_sec):
         """Converts seconds into days, hours, mins.
-        :returns: Given seconds as (days, hours, secs)"""
+        :param total_sec: Total number of seconds to convert to days, hours, mins
+        :returns: (days, hours, secs)"""
         days = total_sec // (24 * 3600)
         total_sec = total_sec % (24 * 3600)
         hours = total_sec // 3600

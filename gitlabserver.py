@@ -14,28 +14,30 @@ class GitLabServer:
 
     @staticmethod
     def build_server_project_path(project_name, owner_email):
-        """Builds a repo name using the project name and email."""
+        """Builds a repo name using the project name and email.
+        :param project_name: Project being worked on, e.g., cloned or graded.
+        :param owner_email: Project owner's email
+        :returns Path name to project repository"""
         repo_name = owner_email
         if '@' in owner_email:
             repo_name = owner_email.split('@')[0]
         repo_name = os.sep.join([repo_name, project_name])
         return repo_name
 
-
     def __init__(self, server_url, api_version=_GITLAB_API_VERSION):
-        """Initializes the GitLabServer with a URL and API version, enabling login and
-        programmatic communication."""
+        """Initializes the GitLabServer with a URL and API version, enabling login and programmatic communication.
+        :param server_url: URL to GitLab server API endpoint
+        :param api_version GitLab API version used for communication"""
         self._url = server_url
         self._api_version = api_version
         self._logger = logging.getLogger("proctor")
 
-
     def login(self, user):
-        """Establishes an authenticated connection to the GitLab server."""
+        """Establishes an authenticated connection to the GitLab server.
+        :param: GitLabUser logging into the GitLab server"""
         self._server = gitlab.Gitlab(url=self._url,
                                      private_token=user.get_private_token(),
                                      api_version=str(self._api_version))
-
 
     def whoami(self):
         """Returns the user currently logged into the GitLab server from the program's perspective.
@@ -44,9 +46,10 @@ class GitLabServer:
         current_user = self._server.user
         return current_user
 
-
     def get_user_project(self, owner_email, project_name):
         """Fetches information about a user's project from the GitLabServer.
+        :param owner_email: Project owner's email
+        :param project_name: Project being worked on
         :returns: Information about the given user's GitLab project."""
         try:
             project_path = GitLabServer.build_server_project_path(project_name, owner_email)
@@ -56,9 +59,9 @@ class GitLabServer:
         except:
             return None
 
-
     def get_user_from_email(self, email):
         """Given an email address, fetches information about a GitLab user.
+        :param email: GitLab user's email
         :returns GitLab user information."""
         users = self._server.users.list(search=email)
         num_users = len(users)
@@ -71,20 +74,20 @@ class GitLabServer:
         errmsg = f"Ambiguous: '{email}'. Try again with a more specific email."
         raise ValueError(errmsg)
 
-
     def get_user_by_id(self, userid):
         """Given a user ID, fetches information about a GitLab user.
+        :param userid: User ID of the GitLab user on the GitLab server
         :returns GitLab user information."""
         return self._server.users.get(userid)
 
-
     def get_projects_named(self, project_name):
         """Fetches information about GitLab projects with a given project name.
+        :param project_name: Name of the project to fetch from the server.
         :returns A list of the all projects available to the currently logged in user that match
-        the given project name."""
+        the given project name. Likely to be multiple, e.g., in the case of many students all having projects
+        of the same name as one another."""
         projects = self._server.projects.list(search=project_name, all=True)
         return projects
-
 
     def clone_project(self, gitlab_project, dest_path_name, force=False):
         """git clone the given project from the GitLab server to the local computer.

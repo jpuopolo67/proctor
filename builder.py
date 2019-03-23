@@ -17,6 +17,8 @@ class Builder:
 
     def build_source(self, email, project_name, dir_to_grade):
         """Builds the project source (*.java) files.
+        :param project_name: Name of the project being built
+        :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors."""
         self._logger.info(f'Building: {email}{os.sep}{project_name}')
         errors = self._compile_project_source(project_name, dir_to_grade)
@@ -28,6 +30,8 @@ class Builder:
 
     def build_tests(self, email, project_name, dir_to_grade):
         """Builds the project unit tests.
+        :param project_name: Name of the project being built
+        :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors"""
         self._logger.info(f'Building tests: {email}{os.sep}{project_name}')
         errors = self._compile_unit_tests(project_name, dir_to_grade)
@@ -38,7 +42,10 @@ class Builder:
         return errors
 
     def _compile_unit_tests(self, project_name, dir_to_grade):
-        """Compiles unit test code via javac."""
+        """Compiles unit test code via javac.
+        :param project_name: Name of the project being built
+        :param dir_to_grade: Root of the directory tree where project files live
+        :returns Number of compiler errors"""
         unit_test_file_names = self._get_unit_test_file_names(project_name, dir_to_grade)
         src_dir = PathManager.get_project_src_dir_name(project_name)
         path_dir = os.sep.join([str(dir_to_grade), src_dir])
@@ -55,7 +62,10 @@ class Builder:
         return build_errors
 
     def _compile_project_source(self, project_name, dir_to_grade):
-        """Compiles Java source code via javac."""
+        """Compiles Java source code via javac.
+        :param project_name: Name of the project being built
+        :param dir_to_grade: Root of the directory tree where project files live
+        :returns: Number of compiler errors"""
         java_file_names = self._get_java_file_names(project_name, dir_to_grade)
         build_errors = 0
         for src_file in java_file_names:
@@ -67,18 +77,25 @@ class Builder:
         return build_errors
 
     def _get_java_file_names(self, project_name, dir_to_grade):
-        """Fetches the names of the *.java source files to compile."""
+        """Fetches the names of the *.java source files to compile.
+        :param project_name: Name of the project being built
+        :param dir_to_grade: Root of the directory tree where project files live"""
         file_names = self._get_project_file_names(project_name, dir_to_grade,
                                                   PathManager.get_project_src_package)
         return file_names
 
     def _get_unit_test_file_names(self, project_name, dir_to_grade):
-        """Fetches the names of the *.java unit test files to compile."""
+        """Fetches the names of the *.java unit test files to compile.
+        :param project_name: Name of the project being built
+        :param dir_to_grade: Root of the directory tree where project files live"""
         file_names = self._get_project_file_names(project_name, dir_to_grade, PathManager.get_project_tests_package)
         return file_names
 
     def _get_project_file_names(self, project_name, dir_to_grade, fn_package, pattern="*.java"):
-        """Fetches the names of the files for a given project that match the given pattern."""
+        """Helper function that fetches the names of the given project's files that match the specified pattern.
+        :param project_name: Name of the project being built
+        :param dir_to_grade: Root of the directory tree where project files live
+        :param fn_package: Function called to retrieve files. One retrieves source names, the other test names"""
         src_dir_name = PathManager.get_project_src_dir_name(project_name)
         files_package = fn_package(project_name)
         files_path = PathManager.package_name_to_path_name(files_package)

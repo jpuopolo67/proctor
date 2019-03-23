@@ -20,7 +20,11 @@ class ProctorLogger:
         return final_msg
 
     def __init__(self, logger_name, console_log_level, proctor_working_dir, logfile_name):
-        """Initializes ProctorLogger."""
+        """Initializes ProctorLogger.
+        :param logger_name: Unique name of the logger that the entire application uses.
+        :param console_log_level: Logging threshold used by the console. The lower the level, e.g., DEBUG, the more output shown on the console.
+        :param proctor_working_dir: Directory that serves as the root for cloned projects, gradebook files, etc.
+        :param logfile_name: Name of the file to which log output is written."""
         self._logger_name = logger_name
 
         # Converts the logging level string read from the config file into

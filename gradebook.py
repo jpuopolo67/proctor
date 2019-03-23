@@ -12,7 +12,10 @@ class GradeBook:
             'source_builds', 'tests_build', 'internal_test_ratio', 'external_test_ratio', 'grade', 'notes']
 
     def __init__(self, proctor_working_dir, project_name, project_due_dt):
-        """Initializes the GradeBook."""
+        """Initializes the GradeBook.
+        :param proctor_working_dir: Proctor's working directory
+        :param project_name: Name of project being graded
+        :param project_due_dt: Project's due datetime in UTC"""
         self._logger = logging.getLogger("proctor")
         self._project_name = project_name
         self._project_due_dt = project_due_dt
@@ -25,24 +28,30 @@ class GradeBook:
         return self._file_name
 
     def local_project_not_found(self, email):
-        """Records a grade record that indicates the project being graded could not be found locally."""
+        """Records a grade record that indicates the project being graded could not be found locally.
+        :param email: Project owner's email"""
         self._record_grade_not_found(email, 'Project not found locally. Cloned correctly?')
 
     def server_project_not_found(self, email):
-        """Records a grade record that indicates the project being graded could not be found on the server."""
+        """Records a grade record that indicates the project being graded could not be found on the server.
+        :param email: Project owner's email"""
         self._record_grade_not_found(email, 'Project not found on server. Handed in?')
 
     def commit_not_found(self, email):
-        """Records a grade record that indicates the project being graded has no server commits."""
+        """Records a grade record that indicates the project being graded has no server commits.
+        :param email: Project owner's email"""
         self._record_grade_not_found(email, 'Commit not found on server. Pushed?')
 
-    def _record_grade_not_found(self, email, notes):
-        """Writes an 'error' grade record to the memory-based gradebook."""
+    def _record_grade_not_found(self, email, notes=''):
+        """Writes an 'error' grade record to the memory-based gradebook.
+        :param email: Project owner's email
+        :param notes: Free-form text comments added to the grade record"""
         self._gradesheet.append([self._project_name, email, self._project_due_dt, 'N/A',
                                  False, 0, 0, 0, False, False, 0.0, 0.0, 'TBD', notes])
 
     def record_grade(self, ginfo):
-        """Writes a grade record to the memory-based gradebook."""
+        """Writes a grade record to the memory-based gradebook.
+        :param ginfo: Dictionary containing the grade record info."""
         grade_record = []
         for col in GradeBook.COLS:
             grade_record.append(ginfo[col])
@@ -62,6 +71,8 @@ class GradeBook:
     def _init_file_name(self, proctor_working_dir, project_name):
         """Determines the file name under which the gradebook will be stored. The format is grades-N.csv where
         N is the 'version' of the file. This prevents accidental overwrite of an existing gradebook file.
+        :param proctor_working_dir: Proctor's working directory
+        :param project_name: Project being graded
         :returns The new gradebook's file name."""
         gradebook_name = os.sep.join([proctor_working_dir, project_name, 'grades-1.csv'])
         path = Path(gradebook_name)
@@ -71,7 +82,8 @@ class GradeBook:
 
     def _get_next_file_name(self, path):
         """Calculates the next file name by incrementing the 'version'.
-        :returns Path representing the gradebook file."""
+        :param path: Path to gradebook file
+        :returns Path representing the new gradebook file."""
         pattern = r'grades-(\d+)'
         spath = str(path)
         match = re.search(pattern, spath)
