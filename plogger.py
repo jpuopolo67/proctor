@@ -1,4 +1,3 @@
-
 import logging
 import termcolor
 import sys
@@ -49,7 +48,7 @@ class ProctorLogger:
                 self._thelogger.addHandler(console_handler)
             if self._logfile_name is not None:
                 file_handler = logging.FileHandler(self._logfile_name)
-                file_handler.setLevel(logging.DEBUG)    # all messages logged
+                file_handler.setLevel(logging.DEBUG)  # all messages logged
                 file_handler.setFormatter(formatter)
                 self._thelogger.addHandler(file_handler)
         except:
@@ -75,6 +74,3 @@ class ProctorLogger:
     def _log(self, msg, log_level, *args, **kwargs):
         the_msg = ProctorLogger._format_msg(msg)
         self._thelogger.log(log_level, the_msg, *args, **kwargs)
-
-
-

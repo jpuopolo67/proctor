@@ -2,10 +2,9 @@
 import gitlab.v3
 import gitlab.v3.objects
 import subprocess
-import shutil
 import logging
 import os
-from pathlib import Path
+from pathmgr import PathManager
 
 
 class GitLabServer:
@@ -76,27 +75,16 @@ class GitLabServer:
     def clone_project(self, gitlab_project, dest_path_name, force=False):
 
         try:
-            dest_path = Path(dest_path_name)
-            self._init_dest_path(dest_path, force)
+            PathManager.init_dest_path(dest_path_name, force)
             http_url = gitlab_project.http_url_to_repo
             self._logger.info('Cloning repo {}...{}'.format(http_url, "(FORCED)" if force else ''))
-            shell_cmd = 'git clone {repo} {dest_dir}'.format(repo=http_url, dest_dir=str(dest_path))
-            result = subprocess.run(['git', 'clone', http_url, str(dest_path)],
+            shell_cmd = 'git clone {repo} {dest_dir}'.format(repo=http_url, dest_dir=dest_path_name)
+            result = subprocess.run(['git', 'clone', http_url, dest_path_name],
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self._logger.info("Cloned successfully")
         except FileExistsError as fex:
             self._logger.warning(fex)
 
 
-    def _init_dest_path(self, dest_path, force):
-        if not dest_path.exists():
-            dest_path.mkdir(parents=True)
-            return
-        if dest_path.exists() and force:
-            shutil.rmtree(dest_path)
-            dest_path.mkdir(parents=True, exist_ok=True)
-            return
 
-        errmsg = "SKIPPED: Destination directory '{}' already exists. " \
-                 "Use --force to overwrite.".format(dest_path)
-        raise FileExistsError(errmsg)
+
