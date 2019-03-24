@@ -66,10 +66,17 @@ class Builder:
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
         :returns: Number of compiler errors"""
+
+        src_dir = PathManager.get_project_src_dir_name(project_name)
+        path_dir = os.sep.join([str(dir_to_grade), src_dir])
+        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}', junit_cp=None)
+
         java_file_names = self._get_java_file_names(project_name, dir_to_grade)
         build_errors = 0
         for src_file in java_file_names:
-            result = subprocess.run(['javac', src_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            result = subprocess.run(['javac', '-classpath', full_classpath,
+                                     '-sourcepath', full_classpath, src_file],
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             result_string = "OK" if result.returncode == 0 else "FAILED"
             file_name = Path(src_file).name
             self._logger.debug(f'...{file_name} => {result_string}')
