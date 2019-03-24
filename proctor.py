@@ -15,10 +15,6 @@ from builder import Builder
 class Proctor:
     """Proctor enables WIT instructors to clone, build, test and grade Java-based projects."""
 
-    _valid_cmds = ('clone', 'grade')
-    _required_opts = {'clone': {'project', 'emails'},
-                      'grade': {'project', 'emails'}}
-
     def __init__(self):
         """Initializes the Proctor"""
         self._init_working_dir()
@@ -27,8 +23,8 @@ class Proctor:
         self._init_logger()
 
         # Log the fact that we're starting
-        banner = '=' * 40
-        self.logger.info(banner)
+        #banner = '=' * 40
+        #self.logger.info(banner)
         self.logger.info("Proctor")
 
         # As a final step, log into the server
@@ -46,13 +42,35 @@ class Proctor:
         self._working_dir_name = ProctorConfig.get_proctor_working_dir()
 
     def _init_args(self):
-        """Helper method that initializes program args and confirms proper usage."""
+        """Helper method that initializes program args."""
         self._argparser = argparse.ArgumentParser()
-        self._argparser.add_argument("cmd", help="command for Proctor to execute: clone (initgb, grade, regrade)")
-        self._argparser.add_argument("--project", help="name of the assignment, lab or project")
-        self._argparser.add_argument("--emails", help="path to text file containing student emails")
-        self._argparser.add_argument("--force", help="force overwrite of existing directory or data",
-                                     action="store_true")
+
+        # clone command
+        subparsers = self._argparser.add_subparsers()
+        parser_clone = subparsers.add_parser('clone', help='clone projects')
+        parser_clone.add_argument("--project", help="name of the assignment, lab or project", required=True)
+        parser_clone.add_argument("--emails", help="path to text file containing student emails", required=True)
+        parser_clone.add_argument("--force", help="force overwrite of existing directory", action="store_true")
+
+        # grade command
+        parser_grade = subparsers.add_parser('grade', help='grade projects')
+        parser_grade.add_argument("--project", help="name of the assignment, lab or project", required=True)
+        parser_grade.add_argument("--emails", help="path to text file containing student emails", required=True)
+
+        # group command
+        parser_group = subparsers.add_parser('group', help='command used to manage groups on server')
+        subparsers_group = parser_group.add_subparsers()
+        # ...create subcommand
+        parser_group_create = subparsers_group.add_parser('create', help='create new group on server')
+        parser_group_create.add_argument('--groupname', type=str, help='name of the group to create', required=True)
+
+        # ...append subcommand
+        parser_group_append = subparsers_group.add_parser('append', help='append emails to existing group on server')
+        parser_group_append.add_argument('--groupname', type=str, help='name of the group to which to append names',
+                                         required=True)
+        parser_group_append.add_argument('--emails', type=str, help='path to text file containing student emails',
+                                         required=True)
+
         self._args = self._argparser.parse_args()
         self._argsdict = vars(self._args)
 
@@ -61,36 +79,42 @@ class Proctor:
         self._server = GitLabServer(ProctorConfig.get_config_value('GitLabServer', 'url'))
         self._user = GitLabUser(ProctorConfig.get_config_value('GitLabUser', 'private_token'))
 
-    def _are_args_valid(self):
-        """Ensures the program runs with valid command and args.
-        :return True if command, args and switches are valid and compatible."""
-
-        # Valid command?
-        cmd = self._args.cmd
-        if cmd not in Proctor._valid_cmds:
-            return False
-
-        # Required options present for the given command?
-        cmd = self._argsdict["cmd"]
-        for opt in Proctor._required_opts[cmd]:
-            if opt not in self._argsdict.keys() or self._argsdict[opt] is None:
-                return False
-        return True
-
     def process_command(self):
         """Process the user-specified command. This method acts as a junction, dispatching
         calls to appropriate handler functions to complete the work."""
-        if not self._are_args_valid():
-            self.logger.warning("Invalid command or incompatible options selected. Please try again.")
-            sys.exit(0)
-        cmd = self._argsdict["cmd"]
+
+        cmd = sys.argv[1]
         if cmd == 'clone':
             self._clone_project()
         elif cmd == 'grade':
             self._grade_project()
+        elif cmd == 'group':
+            self._manage_groups()
         else:
             self.logger.error(f"Unknown command '{cmd}'. Valid commands are: clone, grade")
             sys.exit(0)
+
+    def _manage_groups(self):
+        if len(self._argsdict) == 0:
+            self.logger.error('usage: proctor.py group {create, append} [-h]')
+            self.logger.error("proctor.py group: error: command must include subcommand 'create' or 'append'. Try proctor.py -h.")
+            sys.exit(-1)
+
+        subcommand = sys.argv[2]
+        if subcommand == 'create':
+            self._create_server_group(self._args.groupname)
+            return
+        if subcommand == 'append':
+            self._add_users_to_server_group(self._args.groupname, self._args.emails)
+        else:
+            raise ValueError(f'Unknown group subcommand: {subcommand}')
+
+    def _create_server_group(self, group_name):
+        self._server.create_group(group_name)
+
+    def _add_users_to_server_group(self, group_name, emails_file_name):
+        email_list = self._get_emails_from_file(emails_file_name)
+        self._server.add_users_to_group(group_name, email_list)
 
     def _grade_project(self):
         """Grades the given project for each email in the specified email file.

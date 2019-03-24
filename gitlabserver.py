@@ -4,7 +4,10 @@ import gitlab.v3.objects
 import subprocess
 import logging
 import os
+from gitlab.v3.objects import GitlabError
+from gitlab.v3.objects import GitlabCreateError
 from pathmgr import PathManager
+from pconfig import ProctorConfig
 
 
 class GitLabServer:
@@ -109,6 +112,40 @@ class GitLabServer:
                 self._logger.warning(f'CLONE WAR: {sresult}')
         except FileExistsError as fex:
             self._logger.warning(fex)
+
+    def create_group(self, group_name):
+        try:
+            group_path_prefix = ProctorConfig.get_config_value('GitLabServer', 'group_path_prefix')
+            group_path = '-'.join([group_path_prefix, group_name])
+            self._server.groups.create({'name': group_name,
+                                        'path': group_path,
+                                        'visibility_level': gitlab.VISIBILITY_PRIVATE})
+            self._logger.info(f"Group '{group_path}' created OK")
+        except GitlabCreateError as err:
+            self._logger.error(f'CANNOT CREATE server group {group_name}: {err.error_message}')
+
+    def add_users_to_group(self, group_name, email_list):
+        self._logger.info(f"Adding users to group '{group_name}'")
+        try:
+            groups = self._server.groups.list(search=group_name, all=True)
+            for email in email_list:
+                for group in groups:
+                    try:
+                        self._logger.info(f'Adding {group.name}/{email}')
+                        user = self.get_user_from_email(email)
+                        if not user is None:
+                            member = group.members.create({'user_id': user.id,
+                                                           'access_level': gitlab.DEVELOPER_ACCESS})
+                        else:
+                            self._logger.warning('UNKNOWN. User not found.')
+                    except GitlabCreateError:
+                        self._logger.warning('DUPLICATE. Already exists.')
+                        continue
+        except Exception as e:
+            print(e, type(e))
+            raise e
+
+
 
 
 
