@@ -109,7 +109,7 @@ class GitLabServer:
                 self._logger.info('Cloned OK')
             else:
                 sresult = result.stderr.decode('utf-8')
-                self._logger.warning(f'CLONE WAR: {sresult}')
+                self._logger.warning(f'Clone war: {sresult}')
         except FileExistsError as fex:
             self._logger.warning(fex)
 
@@ -137,9 +137,9 @@ class GitLabServer:
                             member = group.members.create({'user_id': user.id,
                                                            'access_level': gitlab.DEVELOPER_ACCESS})
                         else:
-                            self._logger.warning('UNKNOWN. User not found.')
+                            self._logger.warning('Unknown. User not found.')
                     except GitlabCreateError:
-                        self._logger.warning('DUPLICATE. Already exists.')
+                        self._logger.warning('Duplicate. Already exists.')
                         continue
         except Exception as e:
             print(e, type(e))

@@ -20,12 +20,12 @@ class Builder:
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors."""
-        self._logger.info(f'Building: {email}{os.sep}{project_name}')
+        self._logger.info(f'Building source: {email}{os.sep}{project_name}')
         errors = self._compile_project_source(project_name, dir_to_grade)
         if errors == 0:
             self._logger.debug('Build OK')
         else:
-            self._logger.error(f'BUILD ERRORS: {errors}.  Build failed.')
+            self._logger.error(f'Build errors: {errors}.  Build failed.')
         return errors
 
     def build_tests(self, email, project_name, dir_to_grade):
@@ -33,12 +33,12 @@ class Builder:
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors"""
-        self._logger.info(f'Building tests: {email}{os.sep}{project_name}')
+        self._logger.info(f'Building unit tests: {email}{os.sep}{project_name}')
         errors = self._compile_unit_tests(project_name, dir_to_grade)
         if errors == 0:
             self._logger.debug('Tests built OK')
         else:
-            self._logger.error(f'TEST BUILD ERRORS: {errors}.  Build failed.')
+            self._logger.error(f'Unit test build errors: {errors}.  Build failed.')
         return errors
 
     def _compile_unit_tests(self, project_name, dir_to_grade):
@@ -95,7 +95,7 @@ class Builder:
         """Fetches the names of the *.java unit test files to compile.
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live"""
-        file_names = self._get_project_file_names(project_name, dir_to_grade, PathManager.get_project_tests_package)
+        file_names = self._get_project_file_names(project_name, dir_to_grade, PathManager.get_student_tests_package)
         return file_names
 
     def _get_project_file_names(self, project_name, dir_to_grade, fn_package, pattern="*.java"):

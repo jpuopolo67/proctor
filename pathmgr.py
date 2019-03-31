@@ -53,21 +53,28 @@ class PathManager:
         return PathManager._get_project_config_value(project_name, 'src_package')
 
     @staticmethod
-    def get_project_tests_package(project_name):
+    def get_student_tests_package(project_name):
         """Returns the name of the tests_package to use.
         :param project_name: Name of the project being worked on.
         :returns Name of the tests_package to use"""
-        return PathManager._get_project_config_value(project_name, 'tests_package')
+        return PathManager._get_project_config_value(project_name, 'student_tests_package')
 
     @staticmethod
-    def get_project_student_test_class(project_name):
+    def get_student_test_class(project_name):
         """Returns the name of the student_test_class to use.
         :param project_name: Name of the project being worked on.
         :returns Name of the student_test_class to use"""
         return PathManager._get_project_config_value(project_name, 'student_test_class')
 
     @staticmethod
-    def get_project_instructor_test_class(project_name):
+    def get_instructor_tests_package(project_name):
+        """Returns the name of the tests_package to use.
+        :param project_name: Name of the project being worked on.
+        :returns Name of the tests_package to use"""
+        return PathManager._get_project_config_value(project_name, 'instructor_tests_package')
+
+    @staticmethod
+    def get_instructor_test_class(project_name):
         """Returns the name of the instructor_test_class to use.
         :param project_name: Name of the project being worked on.
         :returns Name of the instructor_test_class to use"""
@@ -116,6 +123,10 @@ class PathManager:
         if cfg_value is None:
             new_key = f'default_{cfg_key}'
             cfg_value = ProctorConfig.get_config_value('Projects', new_key)
+
+        if not cfg_value is None:
+            cfg_value = cfg_value.strip()
+
         return cfg_value  # Might be None and that's OK. Caller handles.
 
     @staticmethod

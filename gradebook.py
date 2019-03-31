@@ -9,7 +9,7 @@ class GradeBook:
 
     # Column headers for the gradebook, which is saved as a CSV file.
     COLS = ['project_name', 'email', 'due_dt', 'latest_commit_dt', 'is_ontime', 'days', 'hours', 'mins',
-            'source_builds', 'tests_build', 'internal_test_ratio', 'external_test_ratio', 'grade', 'notes']
+            'source_builds', 'student_tests_build', 'student_tests_ratio', 'instructor_tests_ratio', 'grade', 'notes']
 
     def __init__(self, proctor_working_dir, project_name, project_due_dt):
         """Initializes the GradeBook.
@@ -65,7 +65,7 @@ class GradeBook:
                 for grade_record in self._gradesheet:
                     writer.writerow(grade_record)
         except FileNotFoundError:
-            self._logger.warning("FAILED OPEN: Cannot open gradebook file {}. Check that directory exists."
+            self._logger.warning("Cannot open gradebook file {}. Check that directory exists."
                                  .format(self._file_name))
 
     def _init_file_name(self, proctor_working_dir, project_name):

@@ -130,12 +130,16 @@ class Proctor:
         grader = Grader(builder, gradebook)
 
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
+        user_projects_not_found = []
+
+        self.logger.info(f'Grading {project_name}')
         for email in owner_emails:
+            self.logger.info('---')
+            self.logger.info(f'Owner {email}')
             dir_to_grade = Path(project_dir) / email
-            self.logger.info('Grading: {}'.format(dir_to_grade))
             if not dir_to_grade.exists():
-                self.logger.warning('NOT FOUND: {} does not exist. Try clone.'
-                                    .format(str(dir_to_grade)))
+                user_projects_not_found.append(email)
+                self.logger.warning('Local project not found: {}. Try clone.'.format(str(dir_to_grade)))
                 gradebook.local_project_not_found(email)
                 continue
             project = self._server.get_user_project(email, project_name)
@@ -146,13 +150,17 @@ class Proctor:
                     grader.grade(email, project_name, dir_to_grade, project_due_dt, latest_commit_date)
                 else:
                     gradebook.commit_not_found(email)
-                    self.logger.warning('NO COMMIT. Project found but cannot find a commit.')
+                    self.logger.warning('No commit. Server project found, no commit.')
             else:
                 gradebook.server_project_not_found(email)
-                self.logger.warning('NOT FOUND: Project not found on server. Check email address.')
+                self.logger.warning('Not found. Project not found on server. Check email address.')
 
+        self.logger.info('---')
         self.logger.info(f'Saving grades to: {gradebook.get_file_name()}')
         gradebook.save()
+
+        if user_projects_not_found:
+            self.logger.info("Projects not found locally: {}".format(user_projects_not_found))
 
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file.
@@ -181,7 +189,7 @@ class Proctor:
                 dest_path_name = PathManager.build_dest_path_name(self._working_dir_name, email, project_name)
                 self._server.clone_project(gitlab_project, dest_path_name, force)
             else:
-                self.logger.warning(f'NOT FOUND: {email}. Check email address.')
+                self.logger.warning(f'Not found: {email}. Check email address.')
 
 
 if __name__ == "__main__":
