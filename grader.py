@@ -65,7 +65,7 @@ class Grader:
         self._logger.info(
             f'Running instructor unit tests: {instructor_test_class_path}')
 
-        if instructor_test_class_path and Path(instructor_test_class_path).exists():
+        if True: #instructor_test_class_path and Path(instructor_test_class_path).exists():
             instructor_test_ratio = self._run_instructor_unit_tests(email, project_name, dir_to_grade,
                                                                     instructor_test_class_path)
             grade_info.update({'instructor_tests_ratio': instructor_test_ratio})
