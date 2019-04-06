@@ -1,8 +1,8 @@
-import logging
 import os
 import re
 import csv
 from pathlib import Path
+from ploggerfactory import ProctorLoggerFactory
 
 class GradeBook:
     """Creates and manages a project's gradebook."""
@@ -16,7 +16,7 @@ class GradeBook:
         :param proctor_working_dir: Proctor's working directory
         :param project_name: Name of project being graded
         :param project_due_dt: Project's due datetime in UTC"""
-        self._logger = logging.getLogger("proctor")
+        self._logger = ProctorLoggerFactory.getLogger()
         self._project_name = project_name
         self._project_due_dt = project_due_dt
         self._file_name = self._init_file_name(proctor_working_dir, project_name)

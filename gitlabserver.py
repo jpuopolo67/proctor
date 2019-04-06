@@ -8,6 +8,7 @@ from gitlab.v3.objects import GitlabError
 from gitlab.v3.objects import GitlabCreateError
 from pathmgr import PathManager
 from pconfig import ProctorConfig
+from ploggerfactory import ProctorLoggerFactory
 
 
 class GitLabServer:
@@ -33,7 +34,7 @@ class GitLabServer:
         :param api_version GitLab API version used for communication"""
         self._url = server_url
         self._api_version = api_version
-        self._logger = logging.getLogger("proctor")
+        self._logger = ProctorLoggerFactory.getLogger()
 
     def login(self, user):
         """Establishes an authenticated connection to the GitLab server.

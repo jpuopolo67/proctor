@@ -5,6 +5,7 @@ import glob
 from logging import Logger
 from pathlib import Path
 from pathmgr import PathManager
+from ploggerfactory import ProctorLoggerFactory
 
 
 class Builder:
@@ -13,7 +14,7 @@ class Builder:
 
     def __init__(self):
         """Initializes the Builder."""
-        self._logger = logging.getLogger("proctor")
+        self._logger = ProctorLoggerFactory.getLogger()
 
     def build_source(self, email, project_name, dir_to_grade):
         """Builds the project source (*.java) files.

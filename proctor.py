@@ -10,6 +10,7 @@ from pathmgr import PathManager
 from grader import Grader
 from gradebook import GradeBook
 from builder import Builder
+from ploggerfactory import ProctorLoggerFactory
 
 
 class Proctor:
@@ -17,25 +18,20 @@ class Proctor:
 
     def __init__(self):
         """Initializes the Proctor"""
+        self._init_logger()     # Put as first line in init so that all other
+                                # components can access the common logger
         self._init_working_dir()
         self._init_args()
         self._init_server()
-        self._init_logger()
-
-        # Log the fact that we're starting
-        #banner = '=' * 40
-        #self.logger.info(banner)
-        self.logger.info("Proctor")
-
-        # As a final step, log into the server
         self._server.login(self._user)
 
     def _init_logger(self):
         """Initializes the Proctor logger."""
-        self.logger = plogger.ProctorLogger('proctor',
-                                            ProctorConfig.get_config_value('Proctor', 'console_log_level'),
-                                            self._working_dir_name,
-                                            ProctorConfig.get_config_value('Proctor', 'logfile_name'))
+        ProctorLoggerFactory.init('proctor',
+                                  ProctorConfig.get_config_value('Proctor', 'console_log_level'),
+                                  ProctorConfig.get_proctor_working_dir(),
+                                  ProctorConfig.get_config_value('Proctor', 'logfile_name'))
+        self._logger = ProctorLoggerFactory.getLogger()
 
     def _init_working_dir(self):
         """Initializes the app's working directory. This is the root of all application operations."""
@@ -91,13 +87,14 @@ class Proctor:
         elif cmd == 'group':
             self._manage_groups()
         else:
-            self.logger.error(f"Unknown command '{cmd}'. Valid commands are: clone, grade")
+            self._logger.error(f"Unknown command '{cmd}'. Valid commands are: clone, grade")
             sys.exit(0)
 
     def _manage_groups(self):
         if len(self._argsdict) == 0:
-            self.logger.error('usage: proctor.py group {create, append} [-h]')
-            self.logger.error("proctor.py group: error: command must include subcommand 'create' or 'append'. Try proctor.py -h.")
+            self._logger.error('usage: proctor.py group {create, append} [-h]')
+            self._logger.error(
+                "proctor.py group: error: command must include subcommand 'create' or 'append'. Try proctor.py -h.")
             sys.exit(-1)
 
         subcommand = sys.argv[2]
@@ -132,14 +129,14 @@ class Proctor:
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         user_projects_not_found = []
 
-        self.logger.info(f'Grading {project_name}')
+        self._logger.info(f'Grading {project_name}')
         for email in owner_emails:
-            self.logger.info('---')
-            self.logger.info(f'Owner {email}')
+            self._logger.info('---')
+            self._logger.info(f'Owner {email}')
             dir_to_grade = Path(project_dir) / email
             if not dir_to_grade.exists():
                 user_projects_not_found.append(email)
-                self.logger.warning('Local project not found: {}. Try clone.'.format(str(dir_to_grade)))
+                self._logger.warning('Local project not found: {}. Try clone.'.format(str(dir_to_grade)))
                 gradebook.local_project_not_found(email)
                 continue
             project = self._server.get_user_project(email, project_name)
@@ -150,17 +147,17 @@ class Proctor:
                     grader.grade(email, project_name, dir_to_grade, project_due_dt, latest_commit_date)
                 else:
                     gradebook.commit_not_found(email)
-                    self.logger.warning('No commit. Server project found, no commit.')
+                    self._logger.warning('No commit. Server project found, no commit.')
             else:
                 gradebook.server_project_not_found(email)
-                self.logger.warning('Not found. Project not found on server. Check email address.')
+                self._logger.warning('Not found. Project not found on server. Check email address.')
 
-        self.logger.info('---')
-        self.logger.info(f'Saving grades to: {gradebook.get_file_name()}')
+        self._logger.info('---')
+        self._logger.info(f'Saving grades to: {gradebook.get_file_name()}')
         gradebook.save()
 
         if user_projects_not_found:
-            self.logger.info("Projects not found locally: {}".format(user_projects_not_found))
+            self._logger.info("Projects not found locally: {}".format(user_projects_not_found))
 
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file.
@@ -168,20 +165,20 @@ class Proctor:
         :returns: List of emails from the given email file."""
         owner_emails = GitLabUser.get_emails(email_file)
         if owner_emails is None:
-            self.logger.error(f'EMAIL FILE {email_file} NOT FOUND. Check the path.')
+            self._logger.error(f'EMAIL FILE {email_file} NOT FOUND. Check the path.')
         return owner_emails
 
     def _clone_project(self):
         """Clones the given project for each email in the specified email file."""
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
         if owner_emails is None:
-            self.logger.error("Cannot clone projects without valid emails. Exiting.")
+            self._logger.error("Cannot clone projects without valid emails. Exiting.")
             sys.exit(-1)
 
         project_name = self._argsdict['project']
 
         # Clone 'em
-        self.logger.info('Cloning project: {}'.format(project_name))
+        self._logger.info('Cloning project: {}'.format(project_name))
         force = self._args.force
         for email in owner_emails:
             gitlab_project = self._server.get_user_project(email, project_name)
@@ -189,12 +186,13 @@ class Proctor:
                 dest_path_name = PathManager.build_dest_path_name(self._working_dir_name, email, project_name)
                 self._server.clone_project(gitlab_project, dest_path_name, force)
             else:
-                self.logger.warning(f'Not found: {email}. Check email address.')
+                self._logger.warning(f'Not found: {email}. Check email address.')
 
 
 if __name__ == "__main__":
     ProctorConfig.init()
     p = Proctor()
+    p._logger.info('*** Proctor ***')
 
     # <editor-fold desc="Drive code. Delete when completed.">
     # testval = ProctorConfig.get_config_value("Projects", "junit_path")
@@ -206,7 +204,7 @@ if __name__ == "__main__":
     #
     # full_path = os.sep.join([path_name, src_code_path_name]) + "*.java"
     # java_files = glob.glob(full_path)
-    # p.logger.info("Grading projects")
+    # pself._logger.info("Grading projects")
     #
     # gr = Grader(GradeBook('/Users/johnpuopolo/Adventure/proctor_wd', 'pa1-review-student-master'))
     # gr.grade('martinezd2@wit.edu', 'pa1-review-student-master',

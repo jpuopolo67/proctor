@@ -1,11 +1,10 @@
 import os
 import subprocess
-import logging
 import re
 from datetime import datetime as dt
 from pathlib import Path
 from pathmgr import PathManager
-
+from ploggerfactory import ProctorLoggerFactory
 
 class Grader:
     """Runs units tests using JUnit and determines the ratio of passed/total, e.g., 10/15"""
@@ -14,7 +13,7 @@ class Grader:
         """Initializes the Grader.
         :param builder: Builder instance that compiles Java source and tests.
         :param gradebook: GradeBook the records and saves the grades per application run."""
-        self._logger = logging.getLogger("proctor")
+        self._logger = ProctorLoggerFactory.getLogger()
         self._builder = builder
         self._gradebook = gradebook
 
@@ -64,8 +63,7 @@ class Grader:
         instructor_test_class_path = PathManager.get_instructor_test_class(project_name)
         self._logger.info(
             f'Running instructor unit tests: {instructor_test_class_path}')
-
-        if True: #instructor_test_class_path and Path(instructor_test_class_path).exists():
+        if Path(instructor_test_class_path + '.class').exists():
             instructor_test_ratio = self._run_instructor_unit_tests(email, project_name, dir_to_grade,
                                                                     instructor_test_class_path)
             grade_info.update({'instructor_tests_ratio': instructor_test_ratio})
@@ -86,15 +84,23 @@ class Grader:
           :param test_class_path: Full path to  the JUnit test suite, e.g., MyTests, sans the .class extention
           :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
 
+
+        # TODO:
+        # * Add the instructure tests/grading package name to the config file
+        # * Change the test class exists check to follow full path (including package) to the .class test files
+        # * Update the path building to include the proper root
+
         # Determine proper paths for java runtime so that we can find test classes
         src_dir = PathManager.get_project_src_dir_name(project_name)
         path_dir = os.sep.join([str(dir_to_grade), src_dir])
+        path_dir = path_dir + ':/Users/johnpuopolo/Adventure/proctor_wd/grading'
         full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}:{test_class_path}', junit_cp=None)
 
         # Run the tests using JUnit's command-line runner
         result = subprocess.run(
-            ['java', '-cp', full_classpath, 'org.junit.runner.JUnitCore', test_class_path],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            ['java', '-cp', full_classpath, 'org.junit.runner.JUnitCore', 'edu.wit.cs.comp1050.grading.PA3aGrading'])
+            #['java', '-cp', full_classpath, 'org.junit.runner.JUnitCore', test_class_path])
+            #stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Process the result of running the tests.
         # Turn the resulting byte stream into a parseable string
