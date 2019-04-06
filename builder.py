@@ -96,7 +96,7 @@ class Builder:
         """Fetches the names of the *.java unit test files to compile.
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live"""
-        file_names = self._get_project_file_names(project_name, dir_to_grade, PathManager.get_student_tests_package)
+        file_names = self._get_project_file_names(project_name, dir_to_grade, PathManager.get_student_test_package)
         return file_names
 
     def _get_project_file_names(self, project_name, dir_to_grade, fn_package, pattern="*.java"):

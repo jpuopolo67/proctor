@@ -53,18 +53,29 @@ class PathManager:
         return PathManager._get_project_config_value(project_name, 'src_package')
 
     @staticmethod
-    def get_student_tests_package(project_name):
+    def get_student_test_suite(project_name):
+        """Returns the name of the student_test_class to use.
+        :param project_name: Name of the project being worked on.
+        :returns Name of the student_test_class to use"""
+        return PathManager._get_project_config_value(project_name, 'student_test_suite')
+
+    @staticmethod
+    def get_student_test_package(project_name):
         """Returns the name of the tests_package to use.
         :param project_name: Name of the project being worked on.
         :returns Name of the tests_package to use"""
-        return PathManager._get_project_config_value(project_name, 'student_tests_package')
+        fq_name = PathManager.get_student_test_suite(project_name)
+        package_name =fq_name [:fq_name.rfind('.')]
+        return package_name
 
     @staticmethod
     def get_student_test_class(project_name):
         """Returns the name of the student_test_class to use.
         :param project_name: Name of the project being worked on.
         :returns Name of the student_test_class to use"""
-        return PathManager._get_project_config_value(project_name, 'student_test_class')
+        fq_name = PathManager.get_student_test_suite(project_name)
+        class_name = fq_name[fq_name.rfind('.') + 1:]
+        return class_name
 
     @staticmethod
     def get_instructor_tests_package(project_name):
@@ -74,11 +85,20 @@ class PathManager:
         return PathManager._get_project_config_value(project_name, 'instructor_tests_package')
 
     @staticmethod
-    def get_instructor_test_class(project_name):
+    def get_instructor_test_suite(project_name):
         """Returns the name of the instructor_test_class to use.
         :param project_name: Name of the project being worked on.
         :returns Name of the instructor_test_class to use"""
-        return PathManager._get_project_config_value(project_name, 'instructor_test_class')
+        suite_dir = PathManager._get_project_config_value(project_name, 'instructor_test_suite_dir')
+        suite_class = PathManager._get_project_config_value(project_name, 'instructor_test_suite')
+        return (suite_dir, suite_class)
+
+    @staticmethod
+    def instructor_test_suite_exists(suite_dir, suite_class):
+        #suite_class_path = PathManager.package_name_to_path_name(suite_class)
+        class_name = suite_class[suite_class.rfind('.') + 1:]
+        target = "{}{}{}.class".format(suite_dir, os.sep, class_name)
+        return Path(target).exists()
 
     @staticmethod
     def get_java_classpath():

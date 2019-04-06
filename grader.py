@@ -60,12 +60,12 @@ class Grader:
         # against the project. We do not build the instructor's tests. This could be added
         # as a feature in the future, should it prove necessary or valuable.
 
-        instructor_test_class_path = PathManager.get_instructor_test_class(project_name)
+        suite_dir, suite_class = PathManager.get_instructor_test_suite(project_name)
         self._logger.info(
-            f'Running instructor unit tests: {instructor_test_class_path}')
-        if Path(instructor_test_class_path + '.class').exists():
+            f'Running instructor unit tests: {suite_dir}:{suite_class}')
+        if PathManager.instructor_test_suite_exists(suite_dir, suite_class):
             instructor_test_ratio = self._run_instructor_unit_tests(email, project_name, dir_to_grade,
-                                                                    instructor_test_class_path)
+                                                                    suite_dir, suite_class)
             grade_info.update({'instructor_tests_ratio': instructor_test_ratio})
         else:
             self._logger.warning('No unit tests specified or unit test class does not exist.')
@@ -76,31 +76,23 @@ class Grader:
         grade_info.update({'notes': ''})
         self._gradebook.record_grade(grade_info)
 
-    def _run_instructor_unit_tests(self, email, project_name, dir_to_grade, test_class_path):
+    def _run_instructor_unit_tests(self, email, project_name, dir_to_grade, suite_dir, suite_class):
         """Runs the project's unit test. Assumes JUnit as testing framework.
           :param email: Project owner's email
           :param project_name: Project being graded
           :param dir_to_grade: Root of directory tree where project files live
-          :param test_class_path: Full path to  the JUnit test suite, e.g., MyTests, sans the .class extention
+          :param suite_dir: Full path to  the JUnit test suite, e.g., MyTests, sans the .class extention
           :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
-
-
-        # TODO:
-        # * Add the instructure tests/grading package name to the config file
-        # * Change the test class exists check to follow full path (including package) to the .class test files
-        # * Update the path building to include the proper root
 
         # Determine proper paths for java runtime so that we can find test classes
         src_dir = PathManager.get_project_src_dir_name(project_name)
         path_dir = os.sep.join([str(dir_to_grade), src_dir])
-        path_dir = path_dir + ':/Users/johnpuopolo/Adventure/proctor_wd/grading'
-        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}:{test_class_path}', junit_cp=None)
+        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}:{suite_dir}', junit_cp=None)
 
         # Run the tests using JUnit's command-line runner
         result = subprocess.run(
-            ['java', '-cp', full_classpath, 'org.junit.runner.JUnitCore', 'edu.wit.cs.comp1050.grading.PA3aGrading'])
-            #['java', '-cp', full_classpath, 'org.junit.runner.JUnitCore', test_class_path])
-            #stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            ['java', '-cp', full_classpath, 'org.junit.runner.JUnitCore', suite_class],
+             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Process the result of running the tests.
         # Turn the resulting byte stream into a parseable string
@@ -129,8 +121,8 @@ class Grader:
                 instructor_tests_ratio = tests_passed / tests_run
                 self._logger.info(f'Test results: {tests_passed} / {tests_run}: {instructor_tests_ratio}')
             else:
-                self._logger.warning("No instructor test were run. Check configuration file and class '{}'"
-                                     .format(test_class_path))
+                self._logger.warning("No instructor test were run. Check configuration file and class '{}:{}'"
+                                     .format(suite_dir, suite_class))
         return instructor_tests_ratio
 
     def _run_project_unit_tests(self, email, project_name, dir_to_grade, test_class_name):
@@ -142,14 +134,12 @@ class Grader:
         :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
         self._logger.info(f'Running unit tests: {email}{os.sep}{project_name}{os.sep}{test_class_name}')
 
-        # Determine proper paths
+        # Determine proper paths and classes
         src_dir = PathManager.get_project_src_dir_name(project_name)
         path_dir = os.sep.join([str(dir_to_grade), src_dir])
-        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}', junit_cp=None)
-
-        tests_package = PathManager.get_student_tests_package(project_name)
-        student_test_class = PathManager.get_student_test_class(project_name)
-        test_suite_class = '.'.join([tests_package, student_test_class])
+        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}',
+                                                        junit_cp=None)
+        test_suite_class = PathManager.get_student_test_suite(project_name)
 
         # Run the tests using JUnit's command-line runner
         result = subprocess.run(
