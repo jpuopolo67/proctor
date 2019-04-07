@@ -4,16 +4,19 @@ import re
 from datetime import datetime as dt
 from pathmgr import PathManager
 from ploggerfactory import ProctorLoggerFactory
+from utrunner import UnitTestRunner
+
 
 class Grader:
     """Runs units tests using JUnit and determines the ratio of passed/total, e.g., 10/15"""
 
-    def __init__(self, builder, gradebook):
+    def __init__(self, builder, testrunner, gradebook):
         """Initializes the Grader.
         :param builder: Builder instance that compiles Java source and tests.
         :param gradebook: GradeBook the records and saves the grades per application run."""
         self._logger = ProctorLoggerFactory.getLogger()
         self._builder = builder
+        self._testrunner = testrunner
         self._gradebook = gradebook
 
     def grade(self, email, project_name, dir_to_grade, project_due_dt, latest_commit_dt):
@@ -46,8 +49,12 @@ class Grader:
         # Run project unit tests and calculate internal test ratio = passed tests / total tests
         test_class_name = PathManager.get_student_test_class(project_name)
         if test_class_name and len(test_class_name) > 0:
-            internal_test_ratio = self._run_project_unit_tests(email, project_name, dir_to_grade, test_class_name)
-            grade_info.update({'student_tests_ratio': internal_test_ratio})
+            num_tests_run, test_ratio = \
+                self._run_project_unit_tests(email, project_name, dir_to_grade, test_class_name)
+            if num_tests_run > 0:
+                grade_info.update({'student_tests_ratio': test_ratio})
+            else:
+                grade_info.update({'student_tests_ratio', 'No tests run!'})
         else:
             self._logger.warning('Missing unit test class. No tests specified.')
             grade_info.update({'student_tests_ratio': 'No tests specified. Check configuration file.'})
@@ -63,9 +70,12 @@ class Grader:
         self._logger.info(
             f'Running instructor unit tests: {suite_dir}:{suite_class}')
         if PathManager.instructor_test_suite_exists(suite_dir, suite_class):
-            instructor_test_ratio = self._run_instructor_unit_tests(email, project_name, dir_to_grade,
-                                                                    suite_dir, suite_class)
-            grade_info.update({'instructor_tests_ratio': instructor_test_ratio})
+            num_tests_run, test_ratio = \
+                self._run_instructor_unit_tests(email, project_name, dir_to_grade, suite_dir, suite_class)
+            if num_tests_run > 0:
+                grade_info.update({'instructor_tests_ratio': test_ratio})
+            else:
+                grade_info.update({'instructor_tests_ratio': 'No tests run!'})
         else:
             self._logger.warning('No unit tests specified or unit test class does not exist.')
             grade_info.update({'instructor_tests_ratio': 'No tests specified. Check configuration file.'})
@@ -82,47 +92,8 @@ class Grader:
           :param dir_to_grade: Root of directory tree where project files live
           :param suite_dir: Full path to  the JUnit test suite, e.g., MyTests, sans the .class extention
           :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
-
-        # Determine proper paths for java runtime so that we can find test classes
-        src_dir = PathManager.get_project_src_dir_name(project_name)
-        path_dir = os.sep.join([str(dir_to_grade), src_dir])
-        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}:{suite_dir}', junit_cp=None)
-
-        # Run the tests using JUnit's command-line runner
-        result = subprocess.run(
-            ['java', '-cp', full_classpath, 'org.junit.runner.JUnitCore', suite_class],
-             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        # Process the result of running the tests.
-        # Turn the resulting byte stream into a parseable string
-        sresult = result.stdout.decode('utf-8')
-
-        # returncode: 0 = all tests successful, non-0 = some errors occurred.
-        instructor_tests_ratio = 0.0
-
-        if result.returncode == 0:
-            pattern = "OK \((\d+) tests\)"
-            m = re.search(pattern, sresult)
-            tests_passed = m.group(1)
-            self._logger.info(f'All tests passed: {tests_passed} / {tests_passed}')
-            instructor_tests_ratio = 1.0
-        else:
-            pattern = "Tests run: (\d+),  Failures: (\d+)"
-            m = re.search(pattern, sresult)
-            try:
-                tests_run = int(m.group(1))
-                tests_failed = int(m.group(2))
-                tests_passed = tests_run - tests_failed
-            except:
-                tests_run = 0
-
-            if tests_run > 0:
-                instructor_tests_ratio = tests_passed / tests_run
-                self._logger.info(f'Test results: {tests_passed} / {tests_run}: {instructor_tests_ratio}')
-            else:
-                self._logger.warning("No instructor test were run. Check configuration file and class '{}:{}'"
-                                     .format(suite_dir, suite_class))
-        return instructor_tests_ratio
+        return \
+            self._testrunner.run_instructor_unit_tests(email, project_name, dir_to_grade, suite_dir, suite_class)
 
     def _run_project_unit_tests(self, email, project_name, dir_to_grade, test_class_name):
         """Runs the project's unit test. Assumes JUnit as testing framework.
@@ -131,41 +102,8 @@ class Grader:
         :param dir_to_grade: Root of directory tree where project files live
         :param test_class_name: Name of the JUnit test suite, e.g., TestSuite, sans the .class extention
         :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
-        self._logger.info(f'Running unit tests: {email}{os.sep}{project_name}{os.sep}{test_class_name}')
-
-        # Determine proper paths and classes
-        src_dir = PathManager.get_project_src_dir_name(project_name)
-        path_dir = os.sep.join([str(dir_to_grade), src_dir])
-        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}',
-                                                        junit_cp=None)
-        test_suite_class = PathManager.get_student_test_suite(project_name)
-
-        # Run the tests using JUnit's command-line runner
-        result = subprocess.run(
-            ['java', '-cp', full_classpath, 'org.junit.runner.JUnitCore', test_suite_class],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        # Process the result of running the tests.
-        # Turn the resulting byte stream into a parseable string
-        sresult = result.stdout.decode('utf-8')
-
-        # returncode: 0 = all tests successful, non-0 = some errors occurred.
-        if result.returncode == 0:
-            pattern = "OK \((\d+) tests\)"
-            m = re.search(pattern, sresult)
-            tests_passed = m.group(1)
-            self._logger.info(f'All tests passed: {tests_passed} / {tests_passed}')
-            internal_test_ratio = 1.0
-        else:
-            pattern = "Tests run: (\d+),  Failures: (\d+)"
-            m = re.search(pattern, sresult)
-            tests_run = int(m.group(1))
-            tests_failed = int(m.group(2))
-            tests_passed = tests_run - tests_failed
-            internal_test_ratio = tests_passed / tests_run
-            self._logger.info(f'Test results: {tests_passed} / {tests_run}: {internal_test_ratio}')
-
-        return internal_test_ratio
+        return \
+            self._testrunner.run_project_unit_tests(email, project_name, dir_to_grade, test_class_name)
 
     def _get_dt_diff_human_readable(self, project_due_date, latest_commit_date):
         """Calculates the difference between project due date and user's latest commit date.
