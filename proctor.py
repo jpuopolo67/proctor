@@ -1,5 +1,4 @@
 import argparse
-import plogger
 import sys
 import os
 from pathlib import Path
@@ -10,7 +9,10 @@ from pathmgr import PathManager
 from grader import Grader
 from gradebook import GradeBook
 from builder import Builder
+from utrunner import UnitTestRunner
 from ploggerfactory import ProctorLoggerFactory
+from postman import Postman
+
 
 
 class Proctor:
@@ -52,6 +54,7 @@ class Proctor:
         parser_grade = subparsers.add_parser('grade', help='grade projects')
         parser_grade.add_argument("--project", help="name of the assignment, lab or project", required=True)
         parser_grade.add_argument("--emails", help="path to text file containing student emails", required=True)
+        parser_grade.add_argument("--chide", help="automatically email students when project not found", action="store_true")
 
         # group command
         parser_group = subparsers.add_parser('group', help='command used to manage groups on server')
@@ -124,21 +127,25 @@ class Proctor:
 
         gradebook = GradeBook(self._working_dir_name, project_name, project_due_dt)
         builder = Builder()
-        grader = Grader(builder, gradebook)
+        testrunner = UnitTestRunner()
+        grader = Grader(builder, testrunner, gradebook)
 
         owner_emails = self._get_emails_from_file(self._argsdict['emails'])
-        user_projects_not_found = []
+        users_missing_project = []
 
         self._logger.info(f'Grading {project_name}')
         for email in owner_emails:
+
             self._logger.info('---')
             self._logger.info(f'Owner {email}')
+
             dir_to_grade = Path(project_dir) / email
             if not dir_to_grade.exists():
-                user_projects_not_found.append(email)
+                users_missing_project.append(email)
                 self._logger.warning('Local project not found: {}. Try clone.'.format(str(dir_to_grade)))
                 gradebook.local_project_not_found(email)
                 continue
+
             project = self._server.get_user_project(email, project_name)
             if project:
                 commits = project.commits.list()
@@ -156,8 +163,11 @@ class Proctor:
         self._logger.info(f'Saving grades to: {gradebook.get_file_name()}')
         gradebook.save()
 
-        if user_projects_not_found:
-            self._logger.info("Projects not found locally: {}".format(user_projects_not_found))
+        if users_missing_project:
+            self._logger.info("Local project missing for: {}".format(users_missing_project))
+            if 'chide' in self._argsdict:
+                Postman.sendmail(users_missing_project, project_name)
+
 
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file.
@@ -193,6 +203,7 @@ if __name__ == "__main__":
     ProctorConfig.init()
     p = Proctor()
     p._logger.info('*** Proctor ***')
+    p._logger.info(f'Logging to file: {p._logger._logfile_name}')
 
     # <editor-fold desc="Drive code. Delete when completed.">
     # testval = ProctorConfig.get_config_value("Projects", "junit_path")
@@ -213,5 +224,8 @@ if __name__ == "__main__":
     # gr._gradebook.save()
     # </editor-fold>
 
-    p.process_command()
+    emails = ['puopolo@gmail.com', 'puopoloj1@wit.edu']
+
+    Postman.sendmail(emails, 'project-ion')
+    #p.process_command()
     sys.exit(0)
