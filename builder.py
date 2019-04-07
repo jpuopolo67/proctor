@@ -1,7 +1,6 @@
-import os
-import logging
-import subprocess
 import glob
+import os
+import subprocess
 from logging import Logger
 from pathlib import Path
 from pathmgr import PathManager
@@ -34,7 +33,7 @@ class Builder:
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors"""
-        self._logger.info(f'Building unit tests: {email}{os.sep}{project_name}')
+        self._logger.info(f'Building student unit tests: {email}{os.sep}{project_name}')
         errors = self._compile_unit_tests(project_name, dir_to_grade)
         if errors == 0:
             self._logger.debug('Tests built OK')
