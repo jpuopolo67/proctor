@@ -2,7 +2,6 @@ import os
 import subprocess
 import re
 from datetime import datetime as dt
-from pathlib import Path
 from pathmgr import PathManager
 from ploggerfactory import ProctorLoggerFactory
 
