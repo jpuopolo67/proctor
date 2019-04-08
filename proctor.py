@@ -105,7 +105,7 @@ class Proctor:
 
     def _glping(self):
         """Hails the GitLab server and returns information about the logged in user."""
-        self._logger.info("glping")
+        #self._logger.info("glping")
         try:
             user = self._server.whoami()
             self._logger\
@@ -113,8 +113,8 @@ class Proctor:
             user_projects = self._server.get_all_projects_owned_by_current_user()
             if user_projects:
                 self._logger.info('Owned projects: {}'.format(len(user_projects)))
-                for p in user_projects:
-                    self._logger.info(repr(p))
+                #for p in user_projects:
+                #    self._logger.info(repr(p))
             else:
                 self._logger.info('No owned projects (yet!)')
         except Exception as e:
@@ -235,9 +235,9 @@ class Proctor:
     def banner(self):
         """Displays useful start-up information when Proctor runs."""
         p._logger.info('*** Proctor ***')
-        p._logger.info('---')
+        #p._logger.info('---')
         p._logger.info(" ".join(sys.argv[:]))
-        p._logger.info('---')
+        #p._logger.info('---')
         p._logger.info(f'Configuration    : {ProctorConfig.config_file}')
         p._logger.info(f'Working directory: {p._working_dir_name}')
         p._logger.info(f'Log file         : {p._logger._logfile_name}')
