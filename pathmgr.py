@@ -1,7 +1,7 @@
-from pathlib import Path
-from pconfig import ProctorConfig
 import os
 import shutil
+from pathlib import Path
+from pconfig import ProctorConfig
 
 
 class PathManager:
@@ -31,9 +31,9 @@ class PathManager:
     @staticmethod
     def build_dest_path_name(working_dir, email, project_name):
         """Builds a file system path name from component parts.
-        :param working_dir: Proctor's working directory name.
-        :param email: Project owner's email.
-        :param project_name: Name of the project being worked on.
+        :param working_dir: Proctor's working directory name
+        :param email: Project owner's email
+        :param project_name: Name of the project being worked on
         :return File system path name."""
         dest_path_name = os.sep.join([working_dir, project_name, email])
         return dest_path_name
@@ -42,35 +42,35 @@ class PathManager:
     def get_project_src_dir_name(project_name):
         """Returns the name of the src_dir to use.
         :param project_name: Name of the project being worked on.
-        :returns Name of the src_dir to use"""
+        :returns Name of the src_dir to use to find project's files"""
         return PathManager._get_project_config_value(project_name, 'src_dir')
 
     @staticmethod
     def get_project_src_package(project_name):
         """Returns the name of the src_package to use.
         :param project_name: Name of the project being worked on.
-        :returns Name of the src_package to use"""
+        :returns Name of the src_package to use to find project source files"""
         return PathManager._get_project_config_value(project_name, 'src_package')
 
     @staticmethod
     def get_student_test_suite(project_name):
-        """Returns the name of the student_test_class to use.
+        """Returns the name of the student_test_suite to use when running student unit tests.
         :param project_name: Name of the project being worked on.
-        :returns Name of the student_test_class to use"""
+        :returns Name of the student_test_suite to use"""
         return PathManager._get_project_config_value(project_name, 'student_test_suite')
 
     @staticmethod
     def get_student_test_package(project_name):
-        """Returns the name of the tests_package to use.
+        """Returns the name of the package under which the student test suite lives
         :param project_name: Name of the project being worked on.
-        :returns Name of the tests_package to use"""
+        :returns Name of the test package to use when running student unit tests"""
         fq_name = PathManager.get_student_test_suite(project_name)
         package_name = fq_name [:fq_name.rfind('.')]
         return package_name
 
     @staticmethod
     def get_student_test_class(project_name):
-        """Returns the name of the student_test_class to use.
+        """Returns the name of the student test class to use.
         :param project_name: Name of the project being worked on.
         :returns Name of the student_test_class to use"""
         fq_name = PathManager.get_student_test_suite(project_name)
@@ -79,34 +79,39 @@ class PathManager:
 
     @staticmethod
     def get_instructor_tests_package(project_name):
-        """Returns the name of the tests_package to use.
+        """Returns the name of the instructor_tests_package to use.
         :param project_name: Name of the project being worked on.
-        :returns Name of the tests_package to use"""
+        :returns Name of the instructor test package to use when running instructor's unit tests"""
         return PathManager._get_project_config_value(project_name, 'instructor_tests_package')
 
     @staticmethod
     def get_instructor_test_suite(project_name):
-        """Returns the name of the instructor_test_class to use.
+        """Returns the name of the instructor test suite directory and suite name. The suite is the single
+        driver class that runs all the unit tests, like TestSuite is for the student unit tests.
         :param project_name: Name of the project being worked on.
-        :returns Name of the instructor_test_class to use"""
+        :returns A tuple containing the directory and full class name of the instructor's unit tests suite"""
         suite_dir = PathManager._get_project_config_value(project_name, 'instructor_test_suite_dir')
         suite_class = PathManager._get_project_config_value(project_name, 'instructor_test_suite')
         return (suite_dir, suite_class)
 
     @staticmethod
     def instructor_test_suite_exists(suite_dir, suite_class):
-        #suite_class_path = PathManager.package_name_to_path_name(suite_class)
+        """Determines if the given test suite exits on the file system.
+        :param suite_dir: Name of the directory to check
+        :param suite_class: package.class name of the instructor's test suite
+        :returns True if the instructor's test suite class exists under the given directory"""
         class_name = suite_class[suite_class.rfind('.') + 1:]
         target = "{}{}{}.class".format(suite_dir, os.sep, class_name)
         return Path(target).exists()
 
     @staticmethod
     def get_java_classpath():
-        """Determines the Java classpath use use.
+        """Determines the Java classpath use use for compilation or execution. May return None if cannot
+        be determined.
+        :returns Java classpath to use for compilation or execution. May return None."""
 
-        First, attempt to read java_classpath from the configuration file. If it's
-        not found or empty, attempt to read the environment CLASSPATH variable.
-        :returns Value of the Java classpath to use or None if it cannot be determined."""
+        # First, attempt to read java_classpath from the configuration file. If it's
+        # not found or is empty, attempt to read the environment CLASSPATH variable.
         java_classpath = ProctorConfig.get_config_value('Projects', 'java_classpath')
         if java_classpath is None or len(java_classpath) == 0:
             try:
@@ -118,7 +123,7 @@ class PathManager:
     @staticmethod
     def get_junit_classpath():
         """Determines the Java classpath use use for JUnit.
-        :returns Value of the Java classpath to use for JUnit or None if it cannot be determined."""
+        :returns Java classpath to use to run JUnit or None if it cannot be determined."""
         return ProctorConfig.get_config_value('Projects', 'junit_path')
 
     @staticmethod

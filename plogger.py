@@ -11,6 +11,9 @@ class ProctorLogger:
     @staticmethod
     def _format_msg(msg, threshold=200, width=40):
         """Used to chop out the middle of a long msg for display purposes.
+        :param msg: Message to format
+        :param threshold: Message must be this long before chopping will commence
+        :param width: The number of characters remaining on the left...right after middle chopped out
         :returns Formatted message, with first and last 'width' characters separated by ellipses."""
         final_msg = msg
         if len(msg) > threshold:
@@ -27,8 +30,8 @@ class ProctorLogger:
         :param logfile_name: Name of the file to which log output is written."""
         self._logger_name = logger_name
 
-        # Converts the logging level string read from the config file into
-        # the associated integer log level value required by logging module
+        # Converts the log level string read from the config file into
+        # the associated log level integer required by the standard logging module
         self._log_level = None
         try:
             self._log_level = getattr(logging, console_log_level)
@@ -81,7 +84,11 @@ class ProctorLogger:
         return self._log(msg, logging.CRITICAL, *args, **kwargs)
 
     def _log(self, msg, log_level, *args, **kwargs):
-        """Format and log given message at the specified log level."""
+        """Format and log the given message, honoring the specified log level.
+        :param msg: Message to log
+        :param log_level: Log level threshold, e.g. INFO.
+        :param *args: Additional positional parameters, required by standard logger
+        :param **kwargs: Additional named parameters, required by standard logger"""
         the_msg = ProctorLogger._format_msg(msg)
         home_dir = os.path.expanduser('~')
         if home_dir in the_msg:

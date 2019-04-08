@@ -1,4 +1,3 @@
-
 import subprocess
 import os
 import re
@@ -15,7 +14,8 @@ class UnitTestRunner:
           :param email: Project owner's email
           :param project_name: Project being graded
           :param dir_to_grade: Root of directory tree where project files live
-          :param suite_dir: Full path to  the JUnit test suite, e.g., MyTests, sans the .class extention
+          :param suite_dir: Full path to  the JUnit test suite, e.g., Grading, sans the .class extention;
+          :param suite_class: Name of test suite class, sans the .class extension
           :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
 
         # Determine proper paths for java runtime so that we can find test classes
@@ -38,7 +38,7 @@ class UnitTestRunner:
         :param email: Project owner's email
         :param project_name: Project being graded
         :param dir_to_grade: Root of directory tree where project files live
-        :param test_class_name: Name of the JUnit test suite, e.g., TestSuite, sans the .class extention
+        :param test_class_name: Name of the JUnit test suite, e.g., TestSuite, sans the .class extension
         :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
 
         self._logger.info(f'Running unit tests: {email}{os.sep}{project_name}{os.sep}{test_class_name}')
@@ -60,25 +60,34 @@ class UnitTestRunner:
             self._process_test_results(results)
 
     def _process_test_results(self, results):
+        """Parses the output of the JUnit tests to determine the ratio of passed tests to executed tests.
+        :param Byte-stream results captured from stdout and stderr from running JUnit tests
+        :returns Tuple (number of tests executed, ratio of tests-passed / tests-executed)"""
 
-        tests_run = 0
-        test_ratio = 0.0
-
+        # Turn the byte stream into a string so that we can parse it easily
         sresults = results.stdout.decode('utf-8')
 
-        if results.returncode == 0:  # all tests passed!
+        # Test stats
+        num_tests_executed = 0
+        test_ratio = 0.0
+
+        # This parsing code is specific to the how JUnit (4.x) renders output to the console.
+        # May need to update it if and when we upgrade JUnit versions.
+
+        if results.returncode == 0:
+            # all tests passed!
             pattern = "OK \((\d+) tests\)"
             m = re.search(pattern, sresults)
-            tests_run = tests_passed = int(m.group(1))
+            num_tests_executed = tests_passed = int(m.group(1))
             test_ratio = 1.0
-            self._logger.info(f'All tests passed: {tests_passed} / {tests_run}')
-        else:   # some failures
+        else:
+            # some failures
             pattern = "Tests run: (\d+),  Failures: (\d+)"
             m = re.search(pattern, sresults)
-            tests_run = int(m.group(1))
+            num_tests_executed = int(m.group(1))
             tests_failed = int(m.group(2))
-            tests_passed = tests_run - tests_failed
-            test_ratio = tests_passed / tests_run
-            self._logger.info(f'Test results: {tests_passed} / {tests_run}: {test_ratio}')
+            tests_passed = num_tests_executed - tests_failed
+            test_ratio = tests_passed / num_tests_executed
 
-        return (tests_run, test_ratio)
+        self._logger.info(f'Test results: {tests_passed} / {num_tests_executed} = {test_ratio}')
+        return (num_tests_executed, test_ratio)

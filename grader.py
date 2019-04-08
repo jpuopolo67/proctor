@@ -1,10 +1,6 @@
-import os
-import subprocess
-import re
 from datetime import datetime as dt
 from pathmgr import PathManager
 from ploggerfactory import ProctorLoggerFactory
-from utrunner import UnitTestRunner
 
 
 class Grader:
@@ -13,6 +9,7 @@ class Grader:
     def __init__(self, builder, testrunner, gradebook):
         """Initializes the Grader.
         :param builder: Builder instance that compiles Java source and tests.
+        :param testrunner: UnitTestRunner that executes JUnit-based tests via shell commands.
         :param gradebook: GradeBook the records and saves the grades per application run."""
         self._logger = ProctorLoggerFactory.getLogger()
         self._builder = builder
@@ -90,8 +87,9 @@ class Grader:
           :param email: Project owner's email
           :param project_name: Project being graded
           :param dir_to_grade: Root of directory tree where project files live
-          :param suite_dir: Full path to  the JUnit test suite, e.g., MyTests, sans the .class extention
-          :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
+          :param suite_dir: Full path to the JUnit test suite, e.g., MyTests, sans the .class extension
+          :param suite_class: The full package.class name of the test suite class, sans the .class extension
+          :returns Ratio of passed tests/all tests as a float. 1.0 means all tests passed."""
         return \
             self._testrunner.run_instructor_unit_tests(email, project_name, dir_to_grade, suite_dir, suite_class)
 
@@ -101,7 +99,7 @@ class Grader:
         :param project_name: Project being graded
         :param dir_to_grade: Root of directory tree where project files live
         :param test_class_name: Name of the JUnit test suite, e.g., TestSuite, sans the .class extention
-        :returns Ratio of passed test/all tests as a floating point number. 1.0 means all tests passed."""
+        :returns Ratio of passed tests/all tests as a float. 1.0 means all tests passed."""
         return \
             self._testrunner.run_project_unit_tests(email, project_name, dir_to_grade, test_class_name)
 
@@ -126,8 +124,8 @@ class Grader:
 
     def _convert_secs_to_days_hrs_mins(self, total_sec):
         """Converts seconds into days, hours, mins.
-        :param total_sec: Total number of seconds to convert to days, hours, mins
-        :returns: (days, hours, secs)"""
+        :param total_sec: Total number of seconds to convert
+        :returns: total_sec in parts (days, hours, mins)"""
         days = total_sec // (24 * 3600)
         total_sec = total_sec % (24 * 3600)
         hours = total_sec // 3600

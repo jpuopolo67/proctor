@@ -1,7 +1,7 @@
 import os
 import configparser
-from pathlib import Path
 import re
+from pathlib import Path
 
 
 class ProctorConfig:
@@ -12,7 +12,7 @@ class ProctorConfig:
 
     @staticmethod
     def init(config_file_path=None):
-        """Initializes the configuration based on the default configuration file.
+        """Initializes the configuration object based on the default configuration file.
         :param config_file_path: Path to the application's configuration file. If None, will check the user's
         home directory, followed by Proctor's working directory, for the configuration file."""
         ProctorConfig.config_file = ProctorConfig._get_config_file_path(config_file_path)
@@ -48,7 +48,7 @@ class ProctorConfig:
 
     @staticmethod
     def get_proctor_working_dir():
-        """Returns where Proctor writes logs, clones git projects, etc.
+        """Returns Proctor's working directory, where the application writes logs, clones git projects, etc.
         :returns Name of the application's working directory."""
         working_dir = ProctorConfig.get_config_value('Proctor', 'working_dir')
         if working_dir.endswith(os.sep):
@@ -60,7 +60,7 @@ class ProctorConfig:
         """Returns the value of the given configuration [section] key. Intelligently expands {placeholders}.
         :param section: Section of the configuration file from which to read the key's value.
         :param key: Key in the section from which to retrieve the value.
-        :returns Value of the given configuration section's key."""
+        :returns Value of the given configuration section's key or None if not found."""
         try:
             value = ProctorConfig.CONFIG.get(section, key)
 

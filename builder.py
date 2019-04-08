@@ -8,7 +8,7 @@ from ploggerfactory import ProctorLoggerFactory
 
 
 class Builder:
-    """Builds the source and test files via javac."""
+    """Builds the source and unit test files via javac."""
     _logger: Logger
 
     def __init__(self):
@@ -17,6 +17,7 @@ class Builder:
 
     def build_source(self, email, project_name, dir_to_grade):
         """Builds the project source (*.java) files.
+        :param email: Name of project owner. Used to find the correct directory to build.
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors."""
@@ -29,7 +30,8 @@ class Builder:
         return errors
 
     def build_tests(self, email, project_name, dir_to_grade):
-        """Builds the project unit tests.
+        """Builds the project unit tests. JUnit assumed.
+        :param email: Name of project owner. Used to find correct directory.
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors"""
@@ -42,7 +44,7 @@ class Builder:
         return errors
 
     def _compile_unit_tests(self, project_name, dir_to_grade):
-        """Compiles unit test code via javac.
+        """Compiles unit test code via javac. JUnit assumed.
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors"""
@@ -65,7 +67,7 @@ class Builder:
         """Compiles Java source code via javac.
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
-        :returns: Number of compiler errors"""
+        :returns Number of compiler errors"""
 
         src_dir = PathManager.get_project_src_dir_name(project_name)
         path_dir = os.sep.join([str(dir_to_grade), src_dir])
@@ -86,7 +88,8 @@ class Builder:
     def _get_java_file_names(self, project_name, dir_to_grade):
         """Fetches the names of the *.java source files to compile.
         :param project_name: Name of the project being built
-        :param dir_to_grade: Root of the directory tree where project files live"""
+        :param dir_to_grade: Root of the directory tree where project files live
+        :returns list of file names"""
         file_names = self._get_project_file_names(project_name, dir_to_grade,
                                                   PathManager.get_project_src_package)
         return file_names
@@ -94,15 +97,18 @@ class Builder:
     def _get_unit_test_file_names(self, project_name, dir_to_grade):
         """Fetches the names of the *.java unit test files to compile.
         :param project_name: Name of the project being built
-        :param dir_to_grade: Root of the directory tree where project files live"""
+        :param dir_to_grade: Root of the directory tree where project files live
+        :returns list of file names"""
         file_names = self._get_project_file_names(project_name, dir_to_grade, PathManager.get_student_test_package)
         return file_names
 
-    def _get_project_file_names(self, project_name, dir_to_grade, fn_package, pattern="*.java"):
+    def _get_project_file_names(self, project_name, dir_to_grade, fn_package, pattern='*.java'):
         """Helper function that fetches the names of the given project's files that match the specified pattern.
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
-        :param fn_package: Function called to retrieve files. One retrieves source names, the other test names"""
+        :param fn_package: Function called to retrieve files. One retrieves source names, the other test names
+        :param pattern: The shell file pattern to use when determining which files to fetch.
+        :returns list of file names"""
         src_dir_name = PathManager.get_project_src_dir_name(project_name)
         files_package = fn_package(project_name)
         files_path = PathManager.package_name_to_path_name(files_package)

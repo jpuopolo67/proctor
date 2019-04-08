@@ -94,6 +94,7 @@ class Proctor:
             sys.exit(0)
 
     def _manage_groups(self):
+        """Ensures proper use of group command"""
         if len(self._argsdict) == 0:
             self._logger.error('usage: proctor.py group {create, append} [-h]')
             self._logger.error(
@@ -110,15 +111,20 @@ class Proctor:
             raise ValueError(f'Unknown group subcommand: {subcommand}')
 
     def _create_server_group(self, group_name):
+        """Creates a new group on the GitLab server.
+        :param Name of group to create"""
         self._server.create_group(group_name)
 
     def _add_users_to_server_group(self, group_name, emails_file_name):
+        """Adds given set of people (emails) to the specified group.
+        :param group_name: Name of group to which to add people
+        :param emails_file_name: Name of file that contains the list of emails to add to the group"""
         email_list = self._get_emails_from_file(emails_file_name)
         self._server.add_users_to_group(group_name, email_list)
 
     def _grade_project(self):
-        """Grades the given project for each email in the specified email file.
-        Projects are expected to have been cloned previously to a local repository.
+        """Grades the given project for each email in the specified email file, pulled from program args.
+        Projects are expected to have been cloned to a local directory previously.
         Results in the gradebook file saved to the project's working directory."""
 
         project_name = self._argsdict['project']
@@ -166,7 +172,8 @@ class Proctor:
         if users_missing_project:
             self._logger.info("Local project missing for: {}".format(users_missing_project))
             if 'chide' in self._argsdict:
-                Postman.sendmail(users_missing_project, project_name)
+                self._logger.info("Chiding people with missing projects...")
+                Postman.sendmail(users_missing_project, project_name, self._logger)
 
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file.
@@ -198,6 +205,7 @@ class Proctor:
                 self._logger.warning(f'Not found: {email}. Check email address.')
 
     def banner(self):
+        """Displays useful start-up information when Proctor runs."""
         p._logger.info('*** Proctor ***')
         p._logger.info('---')
         p._logger.info(" ".join(sys.argv[:]))
@@ -215,7 +223,8 @@ if __name__ == "__main__":
     p.banner()
 
     # <editor-fold desc="editor-fold directive is cool!">
-    # editor-fold is cool!
+    # emails = ['puopolo@gmail.com']
+    # Postman.sendmail(emails, "project-awesome", p._logger)
     # </editor-fold>
 
     p.process_command()

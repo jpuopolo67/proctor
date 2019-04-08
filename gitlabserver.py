@@ -1,10 +1,7 @@
-
+import os
+import subprocess
 import gitlab.v3
 import gitlab.v3.objects
-import subprocess
-import logging
-import os
-from gitlab.v3.objects import GitlabError
 from gitlab.v3.objects import GitlabCreateError
 from pathmgr import PathManager
 from pconfig import ProctorConfig
@@ -18,7 +15,7 @@ class GitLabServer:
 
     @staticmethod
     def build_server_project_path(project_name, owner_email):
-        """Builds a repo name using the project name and email.
+        """Builds a repo name by combining the project name and email.
         :param project_name: Project being worked on, e.g., cloned or graded.
         :param owner_email: Project owner's email
         :returns Path name to project repository"""
@@ -46,7 +43,7 @@ class GitLabServer:
     def whoami(self):
         """Returns the user currently logged into the GitLab server from the program's perspective.
         :returns The name of the currently logged in user."""
-        self._server.auth() #required to make next line work!
+        self._server.auth() # <<< required to make next line work!
         current_user = self._server.user
         return current_user
 
@@ -85,7 +82,7 @@ class GitLabServer:
         return self._server.users.get(userid)
 
     def get_projects_named(self, project_name):
-        """Fetches information about GitLab projects with a given project name.
+        """Fetches information about the specified project from the GitLab server.
         :param project_name: Name of the project to fetch from the server.
         :returns A list of the all projects available to the currently logged in user that match
         the given project name. Likely to be multiple, e.g., in the case of many students all having projects
@@ -115,6 +112,8 @@ class GitLabServer:
             self._logger.warning(fex)
 
     def create_group(self, group_name):
+        """Creates a new group on the GitLab server.
+        :param group_name: Name of the group to create on the GitLab server."""
         try:
             group_path_prefix = ProctorConfig.get_config_value('GitLabServer', 'group_path_prefix')
             group_path = '-'.join([group_path_prefix, group_name])
@@ -123,9 +122,12 @@ class GitLabServer:
                                         'visibility_level': gitlab.VISIBILITY_PRIVATE})
             self._logger.info(f"Group '{group_path}' created OK")
         except GitlabCreateError as err:
-            self._logger.error(f'CANNOT CREATE server group {group_name}: {err.error_message}')
+            self._logger.error(f'Cannot create server group {group_name}: {err.error_message}')
 
     def add_users_to_group(self, group_name, email_list):
+        """Adds the given list of users (emails) to the specified group on the GitLab server.
+        :param group_name: Group to which emails are added
+        :param email_list: List of emails to add to the group"""
         self._logger.info(f"Adding users to group '{group_name}'")
         try:
             groups = self._server.groups.list(search=group_name, all=True)
@@ -145,9 +147,4 @@ class GitLabServer:
         except Exception as e:
             print(e, type(e))
             raise e
-
-
-
-
-
 

@@ -1,28 +1,40 @@
-
 import smtplib
 from pconfig import ProctorConfig
 
+
 class Postman:
+    """Postman enables the application to send emails programmatically."""
     @staticmethod
-    def sendmail(email_list, project_name):
+    def sendmail(email_list, project_name, logger):
+        """Sends an email to each person in the given email list.
+        :param email_list: List of receipient email addresses
+        :param project_name: Name of the project for which email is being sent.
+        :param logger: Proctor's logger"""
+
         Postman._init_server()
         subject = "Missing Project: {}".format(project_name.upper())
         header = f'Subject: {subject}\n'
-        for receiver in email_list:
-            message_body = header + '\n' + Postman._generate_message_body(receiver, project_name)
-            Postman._server.sendmail(Postman._smtp_user, receiver,  message_body)
+        for recipient in email_list:
+            logger.info(f'Chiding {recipient}')
+            message_body = header + '\n' + Postman._generate_message_body(recipient, project_name)
+            Postman._server.sendmail(Postman._smtp_user, recipient,  message_body)
         Postman._server.quit()
 
     @staticmethod
-    def _generate_message_body(person, project_name):
+    def _generate_message_body(recipient_email, project_name):
+        """Generates the body of the email message.
+        :param recipient_email: Email address of recipient
+        :param project_name: Project for which email is being sent
+        :returns Email message body that will be sent to the recipient"""
         message_body = 'Hi {},\n\nI am currently in the process of grading {}, and cannot find your submission.' \
-            .format(person, project_name)
+            .format(recipient_email, project_name)
         message_body += " Please make sure that you've submitted the project to the GitLab server and that you've" \
                         " given me Developer access to it.\n\nThanks."
         return message_body
 
     @staticmethod
     def _init_server():
+        """Initializes SMTP variables and establishes secure communications with the SMTP server."""
         Postman._init_smpt()
         Postman._server = smtplib.SMTP(Postman._smtp_host, Postman._smtp_port)
         Postman._server.ehlo()
@@ -31,6 +43,7 @@ class Postman:
 
     @staticmethod
     def _init_smpt():
+        """Initializes the variables used to communication with the SMTP server. See Proctor's configuration file."""
         Postman._smtp_host = ProctorConfig.get_config_value('SMTP', 'smtp_host')
         Postman._smtp_port = ProctorConfig.get_config_value('SMTP', 'smtp_port')
         Postman._smtp_user = ProctorConfig.get_config_value('SMTP', 'smtp_user')
