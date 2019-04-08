@@ -14,7 +14,6 @@ from ploggerfactory import ProctorLoggerFactory
 from postman import Postman
 
 
-
 class Proctor:
     """Proctor enables WIT instructors to clone, build, test and grade Java-based projects."""
 
@@ -86,10 +85,6 @@ class Proctor:
     def process_command(self):
         """Process the user-specified command. This method acts as a junction, dispatching
         calls to appropriate handler functions to complete the work."""
-        if len(sys.argv) <= 1:
-            print("usage: proctor.py [-h] {glping,clone,grade,group}")
-            sys.exit(-1)
-
         cmd = sys.argv[1]
         if cmd == 'glping':
             self._glping()
@@ -245,6 +240,10 @@ class Proctor:
 
 
 if __name__ == "__main__":
+
+    if len(sys.argv) <= 1:
+        print("usage: proctor.py [-h] {glping,clone,grade,group}")
+        sys.exit(-1)
 
     ProctorConfig.init()
     p = Proctor()
