@@ -47,6 +47,11 @@ class GitLabServer:
         current_user = self._server.user
         return current_user
 
+    def get_all_projects_owned_by_current_user(self):
+        """Gets all projects owned by the user currently logged into the GitLab server.
+        :returns List of all projects owned by the user currently logged into the GitLab server."""
+        return list(self._server.projects.owned(all=True))
+
     def get_user_project(self, owner_email, project_name):
         """Fetches information about a user's project from the GitLabServer.
         :param owner_email: Project owner's email

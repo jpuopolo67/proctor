@@ -43,8 +43,13 @@ class Proctor:
         """Helper method that initializes program args."""
         self._argparser = argparse.ArgumentParser()
 
-        # clone command
+        # organize the hierarchy of command parsers
         subparsers = self._argparser.add_subparsers()
+
+        # glping (GitLab ping)
+        parser_glping = subparsers.add_parser('glping', help='hail the GitLab server to verify everything is working')
+
+        # clone command
         parser_clone = subparsers.add_parser('clone', help='clone projects')
         parser_clone.add_argument("--project", help="name of the assignment, lab or project", required=True)
         parser_clone.add_argument("--emails", help="path to text file containing student emails", required=True)
@@ -81,9 +86,14 @@ class Proctor:
     def process_command(self):
         """Process the user-specified command. This method acts as a junction, dispatching
         calls to appropriate handler functions to complete the work."""
+        if len(sys.argv) <= 1:
+            print("usage: proctor.py [-h] {glping,clone,grade,group}")
+            sys.exit(-1)
 
         cmd = sys.argv[1]
-        if cmd == 'clone':
+        if cmd == 'glping':
+            self._glping()
+        elif cmd == 'clone':
             self._clone_project()
         elif cmd == 'grade':
             self._grade_project()
@@ -92,6 +102,24 @@ class Proctor:
         else:
             self._logger.error(f"Unknown command '{cmd}'. Valid commands are: clone, grade")
             sys.exit(0)
+
+    def _glping(self):
+        """Hails the GitLab server and returns information about the logged in user."""
+        self._logger.info("glping")
+        try:
+            user = self._server.whoami()
+            self._logger\
+                .info(f'Hello {user.name} (id={user.id}, username={user.username}, email={user.email})')
+            user_projects = self._server.get_all_projects_owned_by_current_user()
+            if user_projects:
+                self._logger.info('Owned projects: {}'.format(len(user_projects)))
+                for p in user_projects:
+                    self._logger.info(repr(p))
+            else:
+                self._logger.info('No owned projects (yet!)')
+        except Exception as e:
+            self._logger.error(f'Cannot access GitLab server')
+            self._logger.error(f'Error message: {e}')
 
     def _manage_groups(self):
         """Ensures proper use of group command"""
