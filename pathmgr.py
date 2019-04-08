@@ -65,7 +65,7 @@ class PathManager:
         :param project_name: Name of the project being worked on.
         :returns Name of the tests_package to use"""
         fq_name = PathManager.get_student_test_suite(project_name)
-        package_name =fq_name [:fq_name.rfind('.')]
+        package_name = fq_name [:fq_name.rfind('.')]
         return package_name
 
     @staticmethod

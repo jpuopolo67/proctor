@@ -15,8 +15,8 @@ class ProctorConfig:
         """Initializes the configuration based on the default configuration file.
         :param config_file_path: Path to the application's configuration file. If None, will check the user's
         home directory, followed by Proctor's working directory, for the configuration file."""
-        config_file = ProctorConfig._get_config_file_path(config_file_path)
-        ProctorConfig.CONFIG.read(config_file)
+        ProctorConfig.config_file = ProctorConfig._get_config_file_path(config_file_path)
+        ProctorConfig.CONFIG.read(ProctorConfig.config_file)
 
     @staticmethod
     def _get_config_file_path(config_file_path):

@@ -85,5 +85,5 @@ class ProctorLogger:
         the_msg = ProctorLogger._format_msg(msg)
         home_dir = os.path.expanduser('~')
         if home_dir in the_msg:
-            the_msg = the_msg.replace(home_dir, '~', 1)
+            the_msg = the_msg.replace(home_dir, '~')
         self._thelogger.log(log_level, the_msg, *args, **kwargs)

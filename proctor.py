@@ -168,7 +168,6 @@ class Proctor:
             if 'chide' in self._argsdict:
                 Postman.sendmail(users_missing_project, project_name)
 
-
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file.
         :param email_file: Path to the file that contains project-owner email addresses.
@@ -198,34 +197,26 @@ class Proctor:
             else:
                 self._logger.warning(f'Not found: {email}. Check email address.')
 
+    def banner(self):
+        p._logger.info('*** Proctor ***')
+        p._logger.info('---')
+        p._logger.info(" ".join(sys.argv[:]))
+        p._logger.info('---')
+        p._logger.info(f'Configuration    : {ProctorConfig.config_file}')
+        p._logger.info(f'Working directory: {p._working_dir_name}')
+        p._logger.info(f'Log file         : {p._logger._logfile_name}')
+        p._logger.info('---')
+
 
 if __name__ == "__main__":
+
     ProctorConfig.init()
     p = Proctor()
-    p._logger.info('*** Proctor ***')
-    p._logger.info(f'Logging to file: {p._logger._logfile_name}')
+    p.banner()
 
-    # <editor-fold desc="Drive code. Delete when completed.">
-    # testval = ProctorConfig.get_config_value("Projects", "junit_path")
-    #
-    # path_name = "/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/martinezd2@wit.edu"
-    # # path_name = "/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu"
-    # src_code_path_name = "src/edu/wit/cs/comp1050/"
-    # test_code_path_name = src_code_path_name + "tests/"
-    #
-    # full_path = os.sep.join([path_name, src_code_path_name]) + "*.java"
-    # java_files = glob.glob(full_path)
-    # pself._logger.info("Grading projects")
-    #
-    # gr = Grader(GradeBook('/Users/johnpuopolo/Adventure/proctor_wd', 'pa1-review-student-master'))
-    # gr.grade('martinezd2@wit.edu', 'pa1-review-student-master',
-    #          '/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/martinezd2@wit.edu', None, None)
-    #          #'/Users/johnpuopolo/Adventure/proctor_wd/pa1-review-student-master/lockwalds@wit.edu', None, None)
-    # gr._gradebook.save()
+    # <editor-fold desc="editor-fold directive is cool!">
+    # editor-fold is cool!
     # </editor-fold>
 
-    emails = ['puopolo@gmail.com', 'puopoloj1@wit.edu']
-
-    Postman.sendmail(emails, 'project-ion')
-    #p.process_command()
+    p.process_command()
     sys.exit(0)

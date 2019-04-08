@@ -21,7 +21,8 @@ class UnitTestRunner:
         # Determine proper paths for java runtime so that we can find test classes
         src_dir = PathManager.get_project_src_dir_name(project_name)
         path_dir = os.sep.join([str(dir_to_grade), src_dir])
-        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}:{suite_dir}', junit_cp=None)
+        full_classpath = PathManager.get_full_classpath(java_cp=f'.{os.pathsep}{path_dir}{os.pathsep}{suite_dir}',
+                                                        junit_cp=None)
 
         # Run the tests using JUnit's command-line runner
         results = subprocess.run(
@@ -45,7 +46,7 @@ class UnitTestRunner:
         # Determine proper paths and classes
         src_dir = PathManager.get_project_src_dir_name(project_name)
         path_dir = os.sep.join([str(dir_to_grade), src_dir])
-        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}',
+        full_classpath = PathManager.get_full_classpath(java_cp=f'.{os.pathsep}{path_dir}',
                                                         junit_cp=None)
         test_suite_class = PathManager.get_student_test_suite(project_name)
 
