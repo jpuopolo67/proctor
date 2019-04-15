@@ -22,7 +22,7 @@ class ProctorConfig:
     def _get_config_file_path(config_file_path):
         """Finds the path to Proctor's configuration file.
         :param config_file_path: Path to the application's configuration file. If None, will check the user's
-        home directory, followed by Proctor's working directory, for the configuration file.
+        home directory, followed by the current working directory, for the configuration file.
         :returns Path to the application's configuration file.
         :raises FileNotFoundError if configuration file cannot be found."""
 

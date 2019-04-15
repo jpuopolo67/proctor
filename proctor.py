@@ -1,6 +1,7 @@
 import argparse
 import sys
 import os
+import termcolor
 from pathlib import Path
 from pconfig import ProctorConfig
 from gitlabserver import GitLabServer
@@ -242,7 +243,7 @@ class Proctor:
 if __name__ == "__main__":
 
     if len(sys.argv) <= 1:
-        print("usage: proctor.py [-h] {glping,clone,grade,group}")
+        termcolor.cprint("usage: proctor.py [-h] {glping,clone,grade,group}", color='red')
         sys.exit(-1)
 
     ProctorConfig.init()
