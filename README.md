@@ -138,10 +138,14 @@ Download the Proctor Docker image.
 To understand the rest of the this document, it's important to take a few minutes to understand how
 Proctor works and the assumptions it makes. First, let's take a look at the basic workflow:
 
-![Proctor Workflow](http://wit.jpuopolo.us/wp-content/uploads/2019/04/workflow-e1555163566452.png)
+![Proctor Workflow](http://wit.jpuopolo.us/wp-content/uploads/2019/04/proctor-cmds.png)
 
-Note that the document explains exactly _how_ to do the following things later. For now, it's important
-to understand the overall concepts and structure of the application. 
+Note that managing groups is orthoginal to cloning and building projects and is included
+as a convenience. When dealing with groups of students and multiple class sections on
+the GitLab server, it's useful to be able to grant permissions on a group basis.
+
+Before we get into _how_ to do these things, let's discuss some important concepts
+that will help us understand the application holistically. 
 
 ### Logging In 
 Proctor can manage groups on and download (clone) projects from the GitLab server via the GitLab API. 
@@ -378,6 +382,21 @@ $ grade --project=someproject --emails=allstudents.txt --chide
 $ group create --groupname=extracredit
 $ group append --groupname=extracredit --emails=students.txt
  ```
+ 
+## Future Enhancements
+No single application can cover everyone's needs. I encourage folks to clone this project and contribute to it!
+In fact, if you're teaching a Python class, perhaps assign additions, upgrades and bug fixes to the codebase.
+Some ideas for enhancements include:
+
+* Building the instructor/external unit tests 
+* Enabling a separate step to build the source code independently of grading it
+    * I couldn't think of a compelling use case for this, so left it out for now
+* Enhancing the group management functionality to remove people from groups, grant certain levels
+of access to groups, etc.
+* Replacing the simple CSV-style gradebook with an Excel spreadsheet and adding grading formulas automatically
+* Adding an upload feature to Blackboard and LConnect
+
+
 ## Wrap Up
 I hope that you find Proctor a useful and time-saving application. If you have any questions, or need more
 information, I'd love to hear from you. Just drop me a note at my WIT email address: 
