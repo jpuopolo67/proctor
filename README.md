@@ -24,26 +24,25 @@ Proctor enables you to perform the following actions:
 * Grade Java projects that you've cloned
 * Manage groups on a GitLab server
 
-Before we dive into how to do these things, let's set up our environment and get a 
+Before we dive into how to do these things, let's set up your environment and get a 
 copy of the application up and running.
 
 
 ## Setting up Your Enviroment
 Before you can run Proctor, you need a working environment. Specifically, you need 
-the following SDKs and associated runtimes installed on your computer:
+the following SDKs and associated run-times installed on your computer:
 
 * Java 8 or higher. All references to Java hereafter assume 8 or higher.
 * JUnit 4.x. The application was tested with JUnit 4.12. 
-* Git
+* Git (most recent)
 * Python 3.6 or higher. All references to Python hereafter assume 3.6 or higher.
-
 
 Note that you have two choices relative to using Proctor:
 * You can set up the required tech stack yourself
-* You can download and use a preconfigured Docker image. 
+* You can download and use a preconfigured Docker image
 
 The following directions explain how to set up a local environment. If you'd
-rather use the Docker image, you can skip to that section.
+rather use the Docker image, you can skip directly to the section _Using a Docker Image_.
 
 ### Download, Install and Configure Java & JUnit
 Because Proctor is designed to help grade Java and JUnit-based projects, you need to have
@@ -54,14 +53,11 @@ with the JDK and JUnit to build and test projects.
 * [JUnit 4.x Download](https://junit.org/junit4/)
 
 Download and install the Java JDK and JUnit framework, and configure them normally. There is 
-nothing special you need to do with these to make Proctor work.
+nothing special you need to do with these to make Proctor work properly.
 
 ### Set Up Git
-Use the most recent version of Git.
-
+Download and install the most recent version of Git.
 * [Download Git](https://git-scm.com/downloads)
-* Install & configure Git
-
 
 ### Set Up Python & Python Virtual Environment
 Python virtual environments are isolated sandboxes for Python distributions and projects.
@@ -69,10 +65,10 @@ Each virtual environment is a complelety separate installation of Python, enabli
 multiple copies and versions of Python running on your machine at the same time. 
 Each project can maintain its own set of modules, dependencies, etc.
 
-There are several tools that enable you to manage virtual environments including <i>virtualenv</i> and
-<i>miniconda</i>. I prefer miniconda, and subsequent directions are miniconda-relative. That said, 
+There are several tools that enable you to manage virtual environments including _virtualenv_ and
+_miniconda_. I prefer miniconda, and subsequent directions are miniconda-relative. That said, 
 you should use the tool with which you're most comfortable or familiar. You can read about each 
-and download your favorite from the following links:
+and download your favorite:
 
 * [virtualenv](https://virtualenv.pypa.io/en/latest/)
 * [miniconda](https://docs.conda.io/en/latest/miniconda.html)
@@ -92,19 +88,19 @@ I will assume that is the name you've chosen in the following examples.
 
  * `conda create -n proctor python=3.6 anaconda`
  
- This will create a virtual environment called 'proctor' on your local machine,
+ This will create a virtual environment called _proctor_ on your local machine,
  and will install all necessary packages to support the specified Python environment.
 
 #### Activate Virtual Environment
 Because you can have multiple virtual environments on your machine, you need to choose
-one in which to work. This is called your "active environment." The active environment
+one in which to work. This is called your _active environment_. The active environment
 governs where subsequent Python packages and source code get installed. Packages installed 
 into one virtual environment are isolated from those in all other virtual environments. 
 Along these lines, it's important to have an active environment in which to work. 
 
-If you are using miniconda:
+If you are using miniconda, run the following commands:
 * `conda env list` will display a list of existing environments
-* `source activate proctor` will make proctor your working environment
+* `source activate proctor` will make _proctor_ your working environment
 
 Now that you have activated your virtual environment, you're ready to download
 the Proctor source code.
@@ -116,10 +112,13 @@ active account on the server to access its repositories.
 * Clone Proctor's source repo to a local git-managed directory<br/>
 https://eagle.cs.wit.edu/puopoloj1/proctor.git
 
-   The repo contains a file called <i>requirements.txt</i>. The Python 3 package manager, 
-pip3, uses this file to ensure all required packages are installed. 
+The repo contains a file called `requirements.txt`. The Python 3 package manager, 
+`pip3`, uses this file to download and install all packages that Proctor needs to work properly. 
+Run the following command:
 
-* `pip3 install -r requirements.txt` to install required packages
+* `pip3 install -r requirements.txt`
+
+And that's it! You are now ready to edit Proctor's configuration file.
 
 ### Using a Docker Image
 A Docker image is a preconfigured environment that hosts a base operating system and 
@@ -199,12 +198,19 @@ To run your unit tests, make sure to provide `instructor_test_suite_dir` and `in
 keys under the given project section of the configuration file. If these keys are found, Proctor will 
 attempt to load the specified test suite and run the tests against the project under consideration. 
 Note: While Proctor builds the project's source code and the internal unit tests, it does _not_ 
-attempt to build the instructor's test suite. The instructor will have had compiled the test suite beforehand.  
+attempt to build the instructor's test suite. 
+The instructor will have had compiled the test suite beforehand. 
 
-It's interesting to note that the instructor's tests do not need to be copied to the project/source code
-under test. Using the values in the configuration file and "intelligent pathing", Proctor can,
-in essence, "apply" the instructor's test to the project. Only a single copy of the instructor's tests need
-exist. 
+In general, the instructor can build his/her unit test suite against any one of the projects
+under consideration. For example, let's suppose we are grading _MyProject_ and we cloned _MyProject_
+for 2 students, _s1@wit.edu_ and _s2@wit.edu_. We can build our test suite, e.g., _GradingSuite_ against
+s1's MyProject or s2's MyProject - it makes no difference. The compilation step simply needs reference
+to the classes that will tested.
+
+To emphasize the point, the instructor's tests do not need to be copied to the project/source code
+under test. Using the values in the configuration file and "intelligent pathing", Proctor 
+in essence, applies the instructor's tests to the project. 
+Only a single, compiled copy of the instructor's tests need exist. 
 
 As part of the grading process, Proctor creates a gradebook file named `grades-N.csv`, runs all unit tests, 
 and identifies the number of tests that pass out of the total. All of the information regarding each graded project 
@@ -277,7 +283,7 @@ Section | Names | Values
 The following is an example of a configured `.proctor.cfg` file:
 
 ```
-[Proctor] 
+[Proctor]
 working_dir = /Users/johnpuopolo/Adventure/proctor_wd
 console_log_level = INFO
 logfile_name = proctor.log
@@ -287,14 +293,14 @@ url = https://eagle.cs.wit.edu/
 group_path_prefix = puopoloj1
 
 [GitLabUser]
-private_token = ********************
+private_token = ***
 
 [Projects]
 default_src_dir = src
 default_src_package = edu.wit.cs.comp1050
 default_student_test_suite = edu.wit.cs.comp1050.tests.TestSuite
 default_instructor_test_suite_dir = {Proctor.working_dir}/grading
-default_instructor_test_suite = edu.wit.cs.comp1050.grading.PA3aGrading
+default_instructor_test_suite = edu.wit.cs.comp1050.grading.GradingSuite
 
 java_classpath = ''
 junit_path = {Proctor.working_dir}/JUnitRunner/lib/junit-4.12.jar:{Proctor.working_dir}/JUnitRunner/lib/hamcrest-core-1.3.jar
@@ -303,11 +309,10 @@ junit_path = {Proctor.working_dir}/JUnitRunner/lib/junit-4.12.jar:{Proctor.worki
 smtp_host = smtp.office365.com
 smtp_port = 587
 smtp_user = puopoloj1@wit.edu
-smtp_pwd = *****
+smtp_pwd = ***
 
 [pa1-review-student-master]
 due_dt = 2019-03-05T16:00:00-0500
-src_package = com.xyz
 
 [pa3-oopcli-student-master]
 due_dt = 2018-03-24T00:00:00-0500
@@ -374,7 +379,12 @@ $ group create --groupname=extracredit
 $ group append --groupname=extracredit --emails=students.txt
  ```
 ## Wrap Up
-Proctor is cool.
+I hope that you find Proctor a useful and time-saving application. If you have any questions, or need more
+information, I'd love to hear from you. Just drop me a note at my WIT email address: 
+[puopoloj1@wit.edu](mailto:puopoloj1@wit.edu).
+
+
+
 
 
 

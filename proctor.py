@@ -196,8 +196,9 @@ class Proctor:
         if users_missing_project:
             self._logger.info("Local project missing for: {}".format(users_missing_project))
             if 'chide' in self._argsdict:
-                self._logger.info("Chiding people with missing projects...")
-                Postman.sendmail(users_missing_project, project_name, self._logger)
+                if self._argsdict['chide']:
+                    self._logger.info("Chiding people with missing projects...")
+                    Postman.sendmail(users_missing_project, project_name, self._logger)
 
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file.
@@ -239,6 +240,8 @@ class Proctor:
         p._logger.info(f'Log file         : {p._logger._logfile_name}')
         p._logger.info('---')
 
+    def done(self):
+        p._logger.info('--- Done ---')
 
 if __name__ == "__main__":
 
@@ -249,11 +252,6 @@ if __name__ == "__main__":
     ProctorConfig.init()
     p = Proctor()
     p.banner()
-
-    # <editor-fold desc="editor-fold directive is cool!">
-    # emails = ['puopolo@gmail.com']
-    # Postman.sendmail(emails, "project-awesome", p._logger)
-    # </editor-fold>
-
     p.process_command()
+    p.done()
     sys.exit(0)
