@@ -66,7 +66,7 @@ class GitLabServer:
         for p in all_projects:
             if p.owner.username == username:
                 project_count += 1
-                user_projects.append(p.name)
+                user_projects.append(p.web_url)
 
         return (project_count, user_projects)
 
