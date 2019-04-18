@@ -52,6 +52,24 @@ class GitLabServer:
         :returns List of all projects owned by the user currently logged into the GitLab server."""
         return list(self._server.projects.owned(all=True))
 
+    def get_projects_for_owner(self, email):
+        """Fetches the list of projects owned by the given user/email.
+        :param email: Email for which to find projects on the GitLab server.
+        :returns: Tuple of project count and list of projects owned by given user."""
+
+        user_projects = []
+        project_count = 0
+
+        username = email.replace('@wit.edu', '')
+        all_projects = self._server.projects.list(all=True)
+
+        for p in all_projects:
+            if p.owner.username == username:
+                project_count += 1
+                user_projects.append(p.name)
+
+        return (project_count, user_projects)
+
     def get_user_project(self, owner_email, project_name):
         """Fetches information about a user's project from the GitLabServer.
         :param owner_email: Project owner's email
