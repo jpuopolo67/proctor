@@ -19,6 +19,7 @@ cost of fewer features.
 
 ## What Can I Do with Proctor?
 Proctor enables you to perform the following actions:
+* Display basic configuration information about the application
 * Verify access to a GitLab server
 * List projects by user email
 * Clone Java projects from a GitLab server to your local machine
@@ -161,15 +162,19 @@ The working directory is the root directory on your local machine where Proctor 
 which it clones projects. For purposes of this document, let's suppose we have a directory called 
 `~/procotor/wd` as the working directory.
 
+### Displaying Configuration Information
+To see basic configuration information, execute the `config` command. To display basic information
+plus the contents of the configuration file, add the `--verbose` switch.
+
 ### Verifying Access to GitLab Server
-In order to verify that you can access and log into the GitLab server specificed in the configuration
+In order to verify that you can access and log into the GitLab server specified in the configuration
 file, you can use the GitLab ping command, `glping`. This command will verify connectivity to the server
 and will display project summary information.
 
 ### Listing Projects by Owner Email
-Sometimes it's useful to list the project a given student has uploaded to the server and made available
-to you. To do this, execute the `projects --email=<owner email>`. This will list all of the projects
-uploaded by the given owner.
+Sometimes it's useful to list all of the projects that a given student has uploaded to the server and made available
+to you. To do this, execute the `projects --email=<owner email>` command. This will list all of the projects
+uploaded to the server by the specificed user to which you have access.
 
 ### Cloning
 Cloning is the process of copying a source code repository (repo) from the GitLab server to your local machine.
@@ -390,6 +395,8 @@ of the command use information from the configuration file.
 
 Command | Parameter | Required? | Description
 --- | --- | --- | ---
+**`config`** | | | **Displays basic configuration information**
+| | --verbose | No | Displays basic configuration information and the contents of the configuration file.
 **`glping`** | | | **Verifies communication with and access to the GitLab server**
 **`projects`** | | | **Lists projects**
 | | --email | Yes| User/owner email for which to find projects, e.g., email=puopoloj1@wit.edu

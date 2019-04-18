@@ -44,8 +44,9 @@ class ProctorLogger:
             self._thelogger = logging.getLogger('proctor')
             self._thelogger.setLevel(logging.DEBUG)
 
-            # Define output pattern of the log records
-            formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)8s | %(message)s')
+            # Define formatters and output patterns of the log records
+            logfile_formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)8s | %(message)s')
+            console_formatter = logging.Formatter('%(message)s')
 
             # Remove all handlers to that we cleanly install our own based on values from
             # our configuration file
@@ -55,13 +56,13 @@ class ProctorLogger:
             if self._log_level:
                 console_handler = logging.StreamHandler()
                 console_handler.setLevel(self._log_level)   # define console's log level in config file
-                console_handler.setFormatter(formatter)
+                console_handler.setFormatter(console_formatter)
                 self._thelogger.addHandler(console_handler)
 
             if self._logfile_name is not None:
                 file_handler = logging.FileHandler(self._logfile_name)
                 file_handler.setLevel(logging.DEBUG)        # all messages logged to the log file
-                file_handler.setFormatter(formatter)
+                file_handler.setFormatter(logfile_formatter)
                 self._thelogger.addHandler(file_handler)
         except:
             termcolor.cprint("Proctor ERROR: Invalid configuration file format or malformed key.", 'red')

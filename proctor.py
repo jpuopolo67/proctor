@@ -46,6 +46,10 @@ class Proctor:
         # organize the hierarchy of command parsers
         subparsers = self._argparser.add_subparsers()
 
+        # config
+        parser_config = subparsers.add_parser('config', help='display basic configuration information')
+        parser_config.add_argument("--verbose", help="display entire configruation file", action="store_true")
+
         # glping (GitLab ping)
         parser_glping = subparsers.add_parser('glping', help='hail the GitLab server to verify everything is working')
 
@@ -62,8 +66,8 @@ class Proctor:
         parser_grade.add_argument("--chide", help="automatically email students when project not found", action="store_true")
 
         # project
-        parser_grade = subparsers.add_parser('projects', help='list projects for a given owner/email')
-        parser_grade.add_argument("--email", help="person for which to find the projects", required=True)
+        parser_project = subparsers.add_parser('projects', help='list projects for a given owner/email')
+        parser_project.add_argument("--email", help="person for which to find the projects", required=True)
 
         # group command
         parser_group = subparsers.add_parser('group', help='command used to manage groups on server')
@@ -91,7 +95,9 @@ class Proctor:
         """Process the user-specified command. This method acts as a junction, dispatching
         calls to appropriate handler functions to complete the work."""
         cmd = sys.argv[1]
-        if cmd == 'glping':
+        if cmd == 'config':
+            self._display_config_info()
+        elif cmd == 'glping':
             self._glping()
         elif cmd == 'clone':
             self._clone_project()
@@ -104,6 +110,18 @@ class Proctor:
         else:
             self._logger.error(f"Unknown command '{cmd}'. Valid commands are: clone, grade")
             sys.exit(0)
+
+    def _display_config_info(self):
+        p._logger.info(f'Configuration file: {ProctorConfig.config_file}')
+        p._logger.info(f'Working directory : {p._working_dir_name}')
+        p._logger.info(f'Log file          : {p._logger._logfile_name}')
+        if self._args.verbose:
+            self._display_config_file()
+
+    def _display_config_file(self):
+        print(f'\n{ProctorConfig.config_file}:')
+        with open(ProctorConfig.config_file) as f:
+            print(f.read())
 
     def _find_projects_for_owner(self):
         owner_email = self._argsdict['email']
@@ -245,29 +263,18 @@ class Proctor:
             else:
                 self._logger.warning(f'Not found: {email}. Check email address.')
 
-    def banner(self):
-        """Displays useful start-up information when Proctor runs."""
-        p._logger.info('*** Proctor ***')
-        #p._logger.info('---')
-        p._logger.info(" ".join(sys.argv[:]))
-        #p._logger.info('---')
-        p._logger.info(f'Configuration    : {ProctorConfig.config_file}')
-        p._logger.info(f'Working directory: {p._working_dir_name}')
-        p._logger.info(f'Log file         : {p._logger._logfile_name}')
-        p._logger.info('---')
-
     def done(self):
-        p._logger.info('--- Done ---')
+        # Possibly print something here
+        pass
 
 if __name__ == "__main__":
 
     if len(sys.argv) <= 1:
-        termcolor.cprint("usage: proctor.py [-h] {glping,clone,grade,group}", color='red')
+        termcolor.cprint("usage: proctor.py [-h] {config, glping, clone, grade, group}", color='red')
         sys.exit(-1)
 
     ProctorConfig.init()
     p = Proctor()
-    p.banner()
     p.process_command()
     p.done()
     sys.exit(0)
