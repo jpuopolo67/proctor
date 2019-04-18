@@ -61,6 +61,10 @@ class Proctor:
         parser_grade.add_argument("--emails", help="path to text file containing student emails", required=True)
         parser_grade.add_argument("--chide", help="automatically email students when project not found", action="store_true")
 
+        # project
+        parser_grade = subparsers.add_parser('projects', help='list projects for a given owner/email')
+        parser_grade.add_argument("--email", help="person for which to find the projects", required=True)
+
         # group command
         parser_group = subparsers.add_parser('group', help='command used to manage groups on server')
         subparsers_group = parser_group.add_subparsers()
@@ -93,11 +97,23 @@ class Proctor:
             self._clone_project()
         elif cmd == 'grade':
             self._grade_project()
+        elif cmd == 'projects':
+            self._find_projects_for_owner()
         elif cmd == 'group':
             self._manage_groups()
         else:
             self._logger.error(f"Unknown command '{cmd}'. Valid commands are: clone, grade")
             sys.exit(0)
+
+    def _find_projects_for_owner(self):
+        owner_email = self._argsdict['email']
+        num_projects, projects = self._server.get_projects_for_owner(owner_email)
+        self._logger.info(f'{owner_email} has {num_projects} projects')
+        count = 1
+        for p in projects:
+            self._logger.info(f'{count:2} {p}')
+            count += 1
+        return projects
 
     def _glping(self):
         """Hails the GitLab server and returns information about the logged in user."""

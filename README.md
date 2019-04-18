@@ -20,6 +20,7 @@ cost of fewer features.
 ## What Can I Do with Proctor?
 Proctor enables you to perform the following actions:
 * Verify access to a GitLab server
+* List projects by user email
 * Clone Java projects from a GitLab server to your local machine
 * Grade Java projects that you've cloned
 * Manage groups on a GitLab server
@@ -155,10 +156,20 @@ for a user ID and password. You can find your private token in your GitLab accou
 [Profile Settings](https://eagle.cs.wit.edu/profile/account). 
 You will provide your private token in Proctor's configuration file, discussed in the next section.
 
-### Local Working Directory
+### Using the Local Working Directory
 The working directory is the root directory on your local machine where Proctor keeps its log files and to
 which it clones projects. For purposes of this document, let's suppose we have a directory called 
 `~/procotor/wd` as the working directory.
+
+### Verifying Access to GitLab Server
+In order to verify that you can access and log into the GitLab server specificed in the configuration
+file, you can use the GitLab ping command, `glping`. This command will verify connectivity to the server
+and will display project summary information.
+
+### Listing Projects by Owner Email
+Sometimes it's useful to list the project a given student has uploaded to the server and made available
+to you. To do this, execute the `projects --email=<owner email>`. This will list all of the projects
+uploaded by the given owner.
 
 ### Cloning
 Cloning is the process of copying a source code repository (repo) from the GitLab server to your local machine.
@@ -188,40 +199,67 @@ of the `pa1-review-student-master` project used in COMP1050.
 * The project's unit tests are in the `tests` subdirectory.
 * The project's test suite (the class that runs all the other tests) is called `TestSuite`. 
 
-It's important to understand these directories and paths in order to configure Proctor properly
-via its configuration file, discussed shortly.
+It's important to understand these directories and paths so that you can  
+configure the application properly. We discuss this in a moment.
 
-Grading a project consists of Proctor
+Grading a project consists of Proctor performing the following actions on
+a previously cloned project:
+
 * checking to see if the project is on time
 * building the project's source code (using `javac`) 
 * building the associated unit tests (generally packaged as part of the project)
 * running the unit tests (using `java` and `JUnit`)
 
 Proctor can, optionally, run a set of additional unit tests as specified by the instructor. 
-To run your unit tests, make sure to provide `instructor_test_suite_dir` and `instructor_test_suite` 
-keys under the given project section of the configuration file. If these keys are found, Proctor will 
-attempt to load the specified test suite and run the tests against the project under consideration. 
-Note: While Proctor builds the project's source code and the internal unit tests, it does _not_ 
-attempt to build the instructor's test suite. 
-The instructor will have had compiled the test suite beforehand. 
+To run your (instructor's) unit tests, make sure to provide the 
+`instructor_test_suite_dir` and `instructor_test_suite` keys under the given _[project]_ section of the 
+configuration file. If these keys are found, Proctor will 
+attempt to load the specified test suite and run the tests against the project. 
+
+**Note:** While Proctor builds the project's source code and the internal unit tests, it does _not_ 
+attempt to build the instructor's test suite. The instructor will have had compiled the test suite beforehand. 
 
 In general, the instructor can build his/her unit test suite against any one of the projects
-under consideration. For example, let's suppose we are grading _MyProject_ and we cloned _MyProject_
-for 2 students, _s1@wit.edu_ and _s2@wit.edu_. We can build our test suite, e.g., _GradingSuite_ against
-s1's MyProject or s2's MyProject - it makes no difference. The compilation step simply needs reference
-to the classes that will tested.
+under consideration. For example, let's suppose we are grading _TheProject_ and have cloned it
+for 2 students: _s1@wit.edu_ and _s2@wit.edu_. We can build our test suite, e.g., _GradingSuite_, against
+either student's _TheProject_ - it makes no difference. The compilation step simply needs compile-time 
+references to the classes that will be tested.
 
 To emphasize the point, the instructor's tests do not need to be copied to the project/source code
-under test. Using the values in the configuration file and "intelligent pathing", Proctor 
-in essence, applies the instructor's tests to the project. 
+folder under test. Using the values in the configuration file and "intelligent paths", Proctor 
+in essence, applies the instructor's tests to the project across all students.
 Only a single, compiled copy of the instructor's tests need exist. 
 
-As part of the grading process, Proctor creates a gradebook file named `grades-N.csv`, runs all unit tests, 
-and identifies the number of tests that pass out of the total. All of the information regarding each graded project 
-per student is written to the gradebook file. The _N_ in the gradebook name is like a "version number". It is 
-automatically incremented and appended to the gradebook's name to prevent accidental overwrites over multiple 
-grading runs. The highest _N_ indicates the most recently run gradebook.
-   
+As part of the grading process, Proctor creates a grade file named `grades-N.csv`. As it perform each
+grading step, e.g., building source and running unit tests, it writes the results to the grade book.  
+The _N_ in the grade book name is like a "version number". It is 
+automatically incremented and appended to the grade book's name to prevent accidental overwrites over multiple 
+grading runs. The highest _N_ indicates the most recent grades.
+
+#### Grade Book Format
+The grade book is a simple CSV file that contains the following columns:
+
+Column Name | Type | Description | Example
+--- | --- | --- | ---
+**`project_name`** | string | Name of project graded | pa1-review-student-master
+**`email`** | string | Email of student for which the project is graded | puopoloj1@wit.edu
+**`due_dt`** | datetime | Project due date and time in UTC format | 2019-03-05T16:00:00-0500
+**`latest_commit_dt`** | datetime | Date and time of most recent Git commit from server | 2019-03-04T13:27:09-0500
+**`is_ontime`** | boolean | True if the project latest commit <= due date | TRUE
+**`days`** | integer | Number of days difference between latest commit and due date. If project on time, this is the number of days early, otherwise it's the number of days late. | 4
+**`hours`** | integer | Number of hours (sans days) difference between latest commit and due date. If project on time, this is the number of hours early, otherwise it's the number of hours late. | 11
+**`mins`** | integer | Number of minutes (sans days and hours) difference between latest commit and due date. If project on time, this is the number of minutes early, otherwise it's the number of minutes late. | 22
+**`source_builds`** | boolean | True if project source code built successfully | FALSE
+**`student_tests_build`** | boolean | True if all student's tests built successfully | TRUE
+**`student_tests_ratio`** | float | Ratio of tests-passed/tests-executed | 0.89
+**`instructor_tests_ratio`** | float | Ratio of instructor's tests-passed/tests-executed | 1.0
+**`grade`** | string | Currently left blank. Instructor to manually fill or load in Excel and write formula to grade. | TBD
+**`notes`** | string | Used by Proctor to add errors or issues encountered during grading
+
+The gradebook includes one row per student. So, if there are 25 students in your class and 
+you are grading _TheProject_, you will have 25 rows in _TheProject_'s grade book. This assumes,
+of course, that
+you've included all 25 emails in the file that you used to execute the grading run.
 
 ### Managing Groups
 * ADD TO DIAGRAM and EXPLAIN HERE
@@ -255,7 +293,7 @@ Here we have a section called _GitLabServer_ that contains a single name-value p
 The configuration file is critical. It contains all of the information Proctor needs
 to function properly. The following table explains the valid sections, keys and their uses.
 
-Section | Names | Values
+Section | Key Name | Value Description
 ------- | ----- | ------
 **`[Proctor]`** | | **Application-level configuration**
 | | `working_dir` | Name of Proctor's working directory, to which it clones git repos and writes log files.
@@ -353,6 +391,8 @@ of the command use information from the configuration file.
 Command | Parameter | Required? | Description
 --- | --- | --- | ---
 **`glping`** | | | **Verifies communication with and access to the GitLab server**
+**`projects`** | | | **Lists projects**
+| | --email | Yes| User/owner email for which to find projects, e.g., email=puopoloj1@wit.edu
 **`clone`** | | | **Clones a given project for one or more students**
 | | --project | Yes | Name of the assignment, lab or project to clone, e.g., `pa1-review-student-master`
 | | --emails | Yes | Name of a file containing student/project owner emails. Proctor clones the given project for each email listed in the file. The format is expected to be one email per line.
@@ -375,6 +415,7 @@ unit tests specified by the instructor in the configuration file. The result of 
 created gradebook file.
 ```
 $ glping
+$ projects --email=studentx@wit.edu
 $ clone --project=pa1-review-student-master --emails=proctor_wd/comp1050.txt
 $ clone --project=oop3-cli --emails=mystudents.txt --force
 $ grade --project=pa1-review-student-master --emails=mydir/mystudents.txt 
