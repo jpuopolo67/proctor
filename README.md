@@ -261,7 +261,7 @@ Column Name | Type | Description | Example
 **`grade`** | string | Currently left blank. Instructor to manually fill or load in Excel and write formula to grade. | TBD
 **`notes`** | string | Used by Proctor to add errors or issues encountered during grading
 
-The gradebook includes one row per student. So, if there are 25 students in your class and 
+The grade book includes one row per student. So, if there are 25 students in your class and 
 you are grading _TheProject_, you will have 25 rows in _TheProject_'s grade book. This assumes,
 of course, that
 you've included all 25 emails in the file that you used to execute the grading run.
@@ -416,11 +416,10 @@ Command | Parameter | Required? | Description
 
 #### Command Examples
 The following examples demonstrate all of Proctor's valid commands and their associated parameters.
-The most sophisticated command is `grade` as it accesses the GitLab server, builds the project's source code,
-builds the unit tests associated with the project, runs the associated unit tests, and optionally runs the
-unit tests specified by the instructor in the configuration file. The result of each step is stored in the 
-created gradebook file.
+Assume the command begins with `python proctor.py `
 ```
+$ config
+$ config --verbose
 $ glping
 $ projects --email=studentx@wit.edu
 $ clone --project=pa1-review-student-master --emails=proctor_wd/comp1050.txt
@@ -441,7 +440,7 @@ Some ideas for enhancements include:
     * I couldn't think of a compelling use case for this, so left it out for now
 * Enhancing the group management functionality to remove people from groups, grant certain levels
 of access to groups, etc.
-* Replacing the simple CSV-style gradebook with an Excel spreadsheet and adding grading formulas automatically
+* Replacing the simple CSV-style grade book with an Excel spreadsheet and adding grading formulas automatically
 * Adding an upload feature to Blackboard and LConnect
 
 
