@@ -127,12 +127,14 @@ A Docker image is a preconfigured environment that hosts a base operating system
 various applications packages. Proctor is available as a Docker image that includes
 the following:
 
-* CentOS
+* Alpine Linux
 * Java 8 JDK
 * JUnit 4.12
 * Python 3.8
 * Proctor source code
 * Starter configuration file
+
+Note that this Docker image was created for Linux-based systems.
 
 Download the Proctor Docker image.
 
@@ -437,12 +439,12 @@ Some ideas for enhancements include:
 
 * Building the instructor/external unit tests 
 * Enabling a separate step to build the source code independently of grading it
-    * I couldn't think of a compelling use case for this, so left it out for now
+    * I couldn't think of a compelling use case for this, so left it out in this version
 * Enhancing the group management functionality to remove people from groups, grant certain levels
 of access to groups, etc.
 * Replacing the simple CSV-style grade book with an Excel spreadsheet and adding grading formulas automatically
 * Adding an upload feature to Blackboard and LConnect
-
+* Create a Windows-compatible Docker image and share it on Docker Hub
 
 ## Wrap Up
 I hope that you find Proctor a useful and time-saving application. If you have any questions, or need more

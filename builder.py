@@ -49,9 +49,9 @@ class Builder:
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors"""
         unit_test_file_names = self._get_unit_test_file_names(project_name, dir_to_grade)
-        src_dir = PathManager.get_project_src_dir_name(project_name)
-        path_dir = os.sep.join([str(dir_to_grade), src_dir])
-        full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}', junit_cp=None)
+
+        full_classpath = self._build_unit_test_classpath(project_name, dir_to_grade)
+        self._logger.debug(f'Unit test path: {full_classpath}')
 
         build_errors = 0
         for test_file in unit_test_file_names:
@@ -62,6 +62,24 @@ class Builder:
             self._logger.debug(f'...{file_name} => {result_string}')
             build_errors = build_errors + result.returncode
         return build_errors
+
+    def _build_unit_test_classpath(self, project_name, dir_to_grade):
+        # src directory under project/student email
+        src_root_dir = os.sep.join([str(dir_to_grade), PathManager.get_project_src_dir_name(project_name)])
+
+        # full class name, including package, e.g., src/edu/wit...
+        src_subdir_name = PathManager.package_name_to_path_name(
+            PathManager.get_project_src_package(project_name))
+        src_package_dir = os.sep.join([src_root_dir, src_subdir_name])
+
+        # src directory and src directory + package name
+        sources_dir = os.pathsep.join([src_root_dir, src_package_dir])
+
+        # Java and JUnit libs
+        java_classpath = PathManager.get_full_classpath(java_cp=f'.:{sources_dir}', junit_cp=None)
+
+        # Put them all together to build JUnit-based tests
+        return java_classpath
 
     def _compile_project_source(self, project_name, dir_to_grade):
         """Compiles Java source code via javac.

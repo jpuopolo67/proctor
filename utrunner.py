@@ -73,21 +73,26 @@ class UnitTestRunner:
 
         # This parsing code is specific to the how JUnit (4.x) renders output to the console.
         # May need to update it if and when we upgrade JUnit versions.
+        try:
+            if results.returncode == 0:
+                # all tests passed!
+                pattern = "OK \((\d+) tests\)"
+                m = re.search(pattern, sresults)
+                num_tests_executed = tests_passed = int(m.group(1))
+                test_ratio = 1.0
+            else:
+                # some failures
+                pattern = "Tests run: (\d+),  Failures: (\d+)"
+                m = re.search(pattern, sresults)
+                num_tests_executed = int(m.group(1))
+                tests_failed = int(m.group(2))
+                tests_passed = num_tests_executed - tests_failed
+                test_ratio = tests_passed / num_tests_executed
 
-        if results.returncode == 0:
-            # all tests passed!
-            pattern = "OK \((\d+) tests\)"
-            m = re.search(pattern, sresults)
-            num_tests_executed = tests_passed = int(m.group(1))
-            test_ratio = 1.0
-        else:
-            # some failures
-            pattern = "Tests run: (\d+),  Failures: (\d+)"
-            m = re.search(pattern, sresults)
-            num_tests_executed = int(m.group(1))
-            tests_failed = int(m.group(2))
-            tests_passed = num_tests_executed - tests_failed
-            test_ratio = tests_passed / num_tests_executed
+            self._logger.info(f'Test results: {tests_passed} / {num_tests_executed} = {test_ratio}')
+        except Exception as ex:
+            # Something went wrong...
+            self._logger.error('Error while running unit tests: {}'.format(str(ex)))
+            self._logger.error('Check that instructor test suite is compatible with current project under test.')
 
-        self._logger.info(f'Test results: {tests_passed} / {num_tests_executed} = {test_ratio}')
         return (num_tests_executed, test_ratio)

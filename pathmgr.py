@@ -26,7 +26,7 @@ class PathManager:
             shutil.rmtree(dest_path)
             dest_path.mkdir(parents=True, exist_ok=True)
             return
-        raise FileExistsError("Destination path already exists. Use --force to overwrite.")
+        raise FileExistsError(f"Destination path {dest_path_name} already exists. Use --force.")
 
     @staticmethod
     def build_dest_path_name(working_dir, email, project_name):

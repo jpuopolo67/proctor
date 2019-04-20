@@ -132,7 +132,7 @@ class GitLabServer:
                 sresult = result.stderr.decode('utf-8')
                 self._logger.warning(f'Clone war: {sresult}')
         except FileExistsError as fex:
-            self._logger.warning(fex)
+            self._logger.warning(str(fex))
 
     def create_group(self, group_name):
         """Creates a new group on the GitLab server.

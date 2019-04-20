@@ -9,14 +9,14 @@ class ProctorLogger:
     in the application."""
 
     @staticmethod
-    def _format_msg(msg, threshold=200, width=40):
+    def _format_msg(msg, threshold=2000, width=40):
         """Used to chop out the middle of a long msg for display purposes.
         :param msg: Message to format
         :param threshold: Message must be this long before chopping will commence
         :param width: The number of characters remaining on the left...right after middle chopped out
         :returns Formatted message, with first and last 'width' characters separated by ellipses."""
         final_msg = msg
-        if len(msg) > threshold:
+        if msg and (len(msg) > threshold):
             left_side = msg[:width]
             right_side = msg[-width:]
             final_msg = '...'.join([left_side, right_side])
@@ -64,8 +64,9 @@ class ProctorLogger:
                 file_handler.setLevel(logging.DEBUG)        # all messages logged to the log file
                 file_handler.setFormatter(logfile_formatter)
                 self._thelogger.addHandler(file_handler)
-        except:
+        except Exception as e:
             termcolor.cprint("Proctor ERROR: Invalid configuration file format or malformed key.", 'red')
+            termcolor.cprint(e, 'red')
             sys.exit(0)
 
     # Logging wrappers

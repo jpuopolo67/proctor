@@ -148,7 +148,7 @@ class Proctor:
             else:
                 self._logger.info('No owned projects (yet!)')
         except Exception as e:
-            self._logger.error(f'Cannot access GitLab server')
+            self._logger.error(f'Cannot access GitLab server. Check URL and private token in configuration file.')
             self._logger.error(f'Error message: {e}')
 
     def _manage_groups(self):
@@ -200,8 +200,14 @@ class Proctor:
         self._logger.info(f'Grading {project_name}')
         for email in owner_emails:
 
+            email = email.strip(' ')
+
             self._logger.info('---')
             self._logger.info(f'Owner {email}')
+
+            if len(email) == 0:
+                self._logger.info(f"Invalid owner email '{email}'. Check email file for blank lines.")
+                continue
 
             dir_to_grade = Path(project_dir) / email
             if not dir_to_grade.exists():
@@ -250,18 +256,20 @@ class Proctor:
             self._logger.error("Cannot clone projects without valid emails. Exiting.")
             sys.exit(-1)
 
-        project_name = self._argsdict['project']
-
         # Clone 'em
+        project_name = self._argsdict['project']
         self._logger.info('Cloning project: {}'.format(project_name))
         force = self._args.force
         for email in owner_emails:
+            email = email.strip(' ')
+            if len(email) == 0:
+                continue
             gitlab_project = self._server.get_user_project(email, project_name)
             if gitlab_project:
                 dest_path_name = PathManager.build_dest_path_name(self._working_dir_name, email, project_name)
                 self._server.clone_project(gitlab_project, dest_path_name, force)
             else:
-                self._logger.warning(f'Not found: {email}. Check email address.')
+                self._logger.warning(f"Not found: '{email}'. Check email.")
 
     def done(self):
         # Possibly print something here

@@ -24,11 +24,6 @@ class Grader:
         :param project_due_dt: Project due datetime in UTC
         :param latest_commit_dt: Project's most recent commit datetime from server in UTC"""
 
-        # Reference
-        # COLS = ['project_name', 'email', 'due_dt', 'latest_commit_dt', 'is_ontime', 'days', 'hours', 'mins',
-        #        'source_builds', 'student_tests_build', 'student_test_ratio', 'instructor_test_ratio', 'grade',
-        #        'notes']
-
         # Determines if the project is on time based on due datetime vs. latest commit datetime
         is_ontime, days, hours, mins = self._get_dt_diff_human_readable(project_due_dt, latest_commit_dt)
 
@@ -37,24 +32,36 @@ class Grader:
                       'due_dt': project_due_dt, 'latest_commit_dt': latest_commit_dt,
                       'is_ontime': is_ontime, 'days': days, 'hours': hours, 'mins': mins}
 
-        # Build source and tests
-        errors = self._builder.build_source(email, project_name, dir_to_grade)
-        grade_info.update({'source_builds': errors == 0})
-        errors = self._builder.build_tests(email, project_name, dir_to_grade)
-        grade_info.update({'student_tests_build': errors == 0})
+        # Running list of notes
+        notes = ""
+
+        # Build source
+        self._logger.debug(f'Building source: {dir_to_grade}')
+        build_source_errors = self._builder.build_source(email, project_name, dir_to_grade)
+        grade_info.update({'source_builds': build_source_errors == 0})
+
+        # Build student unit tests
+        if build_source_errors == 0:
+            self._logger.debug(f'Building student unit tests: {dir_to_grade}')
+            build_tests_errors = self._builder.build_tests(email, project_name, dir_to_grade)
+            grade_info.update({'student_tests_build': build_tests_errors == 0})
 
         # Run project unit tests and calculate internal test ratio = passed tests / total tests
-        test_class_name = PathManager.get_student_test_class(project_name)
-        if test_class_name and len(test_class_name) > 0:
-            num_tests_run, test_ratio = \
-                self._run_project_unit_tests(email, project_name, dir_to_grade, test_class_name)
-            if num_tests_run > 0:
-                grade_info.update({'student_tests_ratio': test_ratio})
+        if build_source_errors == 0 and build_tests_errors == 0:
+            test_class_name = PathManager.get_student_test_class(project_name)
+            if test_class_name and len(test_class_name) > 0:
+                num_tests_run, test_ratio = \
+                    self._run_project_unit_tests(email, project_name, dir_to_grade, test_class_name)
+                if num_tests_run > 0:
+                    grade_info.update({'student_tests_ratio': test_ratio})
+                else:
+                    grade_info.update({'student_tests_ratio', 'No tests run!'})
             else:
-                grade_info.update({'student_tests_ratio', 'No tests run!'})
+                self._logger.warning('Missing unit test class. No tests specified.')
+                grade_info.update({'student_tests_ratio': 'No tests specified. Check configuration file.'})
         else:
-            self._logger.warning('Missing unit test class. No tests specified.')
-            grade_info.update({'student_tests_ratio': 'No tests specified. Check configuration file.'})
+            # Cannot run unit tests due to build errors in source or in tests
+            grade_info.update({'student_tests_ratio': 'No tests run due to build failures'})
 
         # Run instructor (external) unit tests if there is an instructor test class defined in
         # the Proctor configuration file
@@ -63,24 +70,29 @@ class Grader:
         # against the project. We do not build the instructor's tests. This could be added
         # as a feature in the future, should it prove necessary or valuable.
 
-        suite_dir, suite_class = PathManager.get_instructor_test_suite(project_name)
-        self._logger.info(
-            f'Running instructor unit tests: {suite_dir}:{suite_class}')
-        if PathManager.instructor_test_suite_exists(suite_dir, suite_class):
-            num_tests_run, test_ratio = \
-                self._run_instructor_unit_tests(email, project_name, dir_to_grade, suite_dir, suite_class)
-            if num_tests_run > 0:
-                grade_info.update({'instructor_tests_ratio': test_ratio})
+        if build_source_errors == 0:
+            suite_dir, suite_class = PathManager.get_instructor_test_suite(project_name)
+            self._logger.info(
+                f'Running instructor unit tests: {suite_dir}:{suite_class}')
+            if PathManager.instructor_test_suite_exists(suite_dir, suite_class):
+                num_tests_run, test_ratio = \
+                    self._run_instructor_unit_tests(email, project_name, dir_to_grade, suite_dir, suite_class)
+                if num_tests_run > 0:
+                    grade_info.update({'instructor_tests_ratio': test_ratio})
+                else:
+                    grade_info.update({'instructor_tests_ratio': 'No tests run!'})
             else:
-                grade_info.update({'instructor_tests_ratio': 'No tests run!'})
+                self._logger.warning('No unit tests specified or unit test class does not exist.')
+                grade_info.update({'instructor_tests_ratio': 'No tests specified. Check configuration file.'})
         else:
-            self._logger.warning('No unit tests specified or unit test class does not exist.')
-            grade_info.update({'instructor_tests_ratio': 'No tests specified. Check configuration file.'})
+            self._logger.info('Skipping instructor unit tests due to source build failures')
+            grade_info.update({'instructor_tests_ratio': 'No tests run due to source build failures'})
 
         # Record the results of grading this user's project in the gradebook.
         grade_info.update({'grade': 'TBD'})
-        grade_info.update({'notes': ''})
+        grade_info.update({'notes': notes})
         self._gradebook.record_grade(grade_info)
+
 
     def _run_instructor_unit_tests(self, email, project_name, dir_to_grade, suite_dir, suite_class):
         """Runs the project's unit test. Assumes JUnit as testing framework.
