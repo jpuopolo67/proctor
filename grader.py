@@ -72,21 +72,24 @@ class Grader:
 
         if build_source_errors == 0:
             suite_dir, suite_class = PathManager.get_instructor_test_suite(project_name)
-            self._logger.info(
-                f'Running instructor unit tests: {suite_dir}:{suite_class}')
-            if PathManager.instructor_test_suite_exists(suite_dir, suite_class):
-                num_tests_run, test_ratio = \
-                    self._run_instructor_unit_tests(email, project_name, dir_to_grade, suite_dir, suite_class)
-                if num_tests_run > 0:
-                    grade_info.update({'instructor_tests_ratio': test_ratio})
+            if suite_class:
+                self._logger.info(
+                    f'Running instructor unit tests: {suite_dir}:{suite_class}')
+                if PathManager.instructor_test_suite_exists(suite_dir, suite_class):
+                    num_tests_run, test_ratio = \
+                        self._run_instructor_unit_tests(email, project_name, dir_to_grade, suite_dir, suite_class)
+                    if num_tests_run > 0:
+                        grade_info.update({'instructor_tests_ratio': test_ratio})
+                    else:
+                        grade_info.update({'instructor_tests_ratio': 'No tests run!'})
                 else:
-                    grade_info.update({'instructor_tests_ratio': 'No tests run!'})
+                    self._logger.warning('No unit tests specified or unit test class does not exist.')
+                    grade_info.update({'instructor_tests_ratio': 'No tests specified. Check configuration file.'})
             else:
-                self._logger.warning('No unit tests specified or unit test class does not exist.')
-                grade_info.update({'instructor_tests_ratio': 'No tests specified. Check configuration file.'})
+                self._logger.info('Skipping instructor unit tests due to source build failures')
+                grade_info.update({'instructor_tests_ratio': 'No tests run due to source build failures'})
         else:
-            self._logger.info('Skipping instructor unit tests due to source build failures')
-            grade_info.update({'instructor_tests_ratio': 'No tests run due to source build failures'})
+            self._logger.info("No instructor unit tests specified in the configuration file. Continuing.")
 
         # Record the results of grading this user's project in the gradebook.
         grade_info.update({'grade': 'TBD'})

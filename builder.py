@@ -48,19 +48,28 @@ class Builder:
         :param project_name: Name of the project being built
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors"""
-        unit_test_file_names = self._get_unit_test_file_names(project_name, dir_to_grade)
 
+        self._logger.debug(f'Compiling unit tests: {dir_to_grade}')
+
+        unit_test_file_names = self._get_unit_test_file_names(project_name, dir_to_grade)
         full_classpath = self._build_unit_test_classpath(project_name, dir_to_grade)
-        self._logger.debug(f'Unit test path: {full_classpath}')
+
+        self._logger.debug(f'Unit test classpath: {full_classpath}')
 
         build_errors = 0
-        for test_file in unit_test_file_names:
-            result = subprocess.run(['javac', '-classpath', full_classpath, test_file],
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            result_string = "OK" if result.returncode == 0 else "FAILED"
-            file_name = Path(test_file).name
-            self._logger.debug(f'...{file_name} => {result_string}')
-            build_errors = build_errors + result.returncode
+
+        try:
+            for test_file in unit_test_file_names:
+                result = subprocess.run(['javac', '-classpath', full_classpath, test_file],
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                result_string = "OK" if result.returncode == 0 else "FAILED"
+                file_name = Path(test_file).name
+                self._logger.debug(f'...{file_name} => {result_string}')
+                build_errors = build_errors + result.returncode
+        except Exception as ex:
+            self._logger.error("Exception caught while building unit tests {}".format(str(ex)))
+            build_errors += 1
+
         return build_errors
 
     def _build_unit_test_classpath(self, project_name, dir_to_grade):
@@ -87,20 +96,32 @@ class Builder:
         :param dir_to_grade: Root of the directory tree where project files live
         :returns Number of compiler errors"""
 
+        self._logger.debug(f'Compiling project source code: {dir_to_grade}')
+
         src_dir = PathManager.get_project_src_dir_name(project_name)
         path_dir = os.sep.join([str(dir_to_grade), src_dir])
         full_classpath = PathManager.get_full_classpath(java_cp=f'.:{path_dir}', junit_cp=None)
 
+        self._logger.debug(f'src_dir: {src_dir}')
+        self._logger.debug(f'path_dir: {path_dir}')
+        self._logger.debug(f'full_classpath: {full_classpath}')
+
         java_file_names = self._get_java_file_names(project_name, dir_to_grade)
         build_errors = 0
-        for src_file in java_file_names:
-            result = subprocess.run(['javac', '-classpath', full_classpath,
-                                     '-sourcepath', full_classpath, src_file],
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            result_string = "OK" if result.returncode == 0 else "FAILED"
-            file_name = Path(src_file).name
-            self._logger.debug(f'...{file_name} => {result_string}')
-            build_errors = build_errors + result.returncode
+
+        try:
+            for src_file in java_file_names:
+                result = subprocess.run(['javac', '-classpath', full_classpath,
+                                         '-sourcepath', full_classpath, src_file],
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                result_string = "OK" if result.returncode == 0 else "FAILED"
+                file_name = Path(src_file).name
+                self._logger.debug(f'...{file_name} => {result_string}')
+                build_errors = build_errors + result.returncode
+        except Exception as ex:
+            self._logger.error("Exception caught while compiling source: {}".format(str(ex)))
+            build_errors += 1
+
         return build_errors
 
     def _get_java_file_names(self, project_name, dir_to_grade):

@@ -269,7 +269,7 @@ class Proctor:
                 dest_path_name = PathManager.build_dest_path_name(self._working_dir_name, email, project_name)
                 self._server.clone_project(gitlab_project, dest_path_name, force)
             else:
-                self._logger.warning(f"Not found: '{email}'. Check email.")
+                self._logger.warning(f"Project not found. Check project name '{project_name}' and email '{email}'.")
 
     def done(self):
         # Possibly print something here
