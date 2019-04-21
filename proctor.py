@@ -42,7 +42,7 @@ class Proctor:
                     termcolor.cprint('Specified config file does not exist or cannot be found.', 'red')
                     sys.exit(-1)
             except Exception as ex:
-                termcolor.cprint('Do not understand config --file parameter. Please try again.', 'red')
+                termcolor.cprint('Missing or invalid --file parameter. Please try again.', 'red')
                 sys.exit(-1)
 
         return config_file
