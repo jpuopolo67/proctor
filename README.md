@@ -3,25 +3,25 @@
 ## User Guide
 
 ## Welcome
-<i>Procto</i>r is a Python 3.6 command-line application that enables you to grade Java-based projects. 
+_Proctor_ is a Python 3.6 command-line application that enables you to grade Java-based projects. 
 It is intended for use by Wentworth Institute of Technology (WIT) instructors. This document serves 
-as a user guide and as a reference.
+as a user guide and reference.
 
 The application runs on various operating systems including Windows, Linux and MacOS, and relies 
 on having network access to a GitLab server. 
 
-It has been tested on the following:
+It has been tested on the following operating systems:
 * MacOS Mojave 10.15
-* <B>OTHERS HERE</B>.
+* Alpine Linux v3.9
 
-Note that Proctor is inspired heavily by Derbinsy's witgrade, offering increased simplicity at the 
+Note that Proctor is inspired heavily by Derbinsy's _witgrade_, offering increased simplicity at the 
 cost of fewer features.
 
 ## What Can I Do with Proctor?
 Proctor enables you to perform the following actions:
-* Display basic configuration information about the application
+* Display basic and verbose configuration information about the application
 * Verify access to a GitLab server
-* List projects by user email
+* List projects owned by a given user
 * Clone Java projects from a GitLab server to your local machine
 * Grade Java projects that you've cloned
 * Manage groups on a GitLab server
@@ -40,7 +40,7 @@ the following SDKs and associated run-times installed on your computer:
 * Python 3.6 or higher. All references to Python hereafter assume 3.6 or higher.
 
 Note that you have two choices relative to using Proctor:
-* You can set up the required tech stack yourself
+* You can set up the required tech stack yourself on a local machine or in the cloud
 * You can download and use a preconfigured Docker image
 
 The following directions explain how to set up a local environment. If you'd
@@ -130,13 +130,68 @@ the following:
 * Alpine Linux
 * Java 8 JDK
 * JUnit 4.12
-* Python 3.8
+* Python 3.6
+* Git
 * Proctor source code
 * Starter configuration file
+* VIM editor
 
-Note that this Docker image was created for Linux-based systems.
+This Docker image was created for Linux-based systems and is not compatiable with Windows.
 
-Download the Proctor Docker image.
+To use Proctor's Docker image:
+
+* Make sure you have [Docker](https://www.docker.com/) installed and running on your local machine
+* Download the image from the Docker Hub registry:<br/>
+`docker pull jpuopolo/proctor`
+
+When you run a container based on this image, you will find several directories:
+* `/root` 
+    * You run the container as user _root_. You will find a starter `.proctor.cfg` in this directory.
+    You will need to edit this file and supply some values, discussed shortly.
+* `/home/proctor`
+    * This is where Proctor's source code lives. You can run the application from this directory.
+* `/home/proctor/work`
+    * This is Proctor's default working directory, where cloned projects and log files live.
+* `/data`
+    * This is the directory to use to retain data between container runs, e.g., your edited 
+    `.proctor.cfg` file. Each time you create a container based on the Proctor image, you will lose the
+    edits to your configuration file, so you'll want a copy of the edited, "good" one. We
+    discuss this in more detail here.
+
+Before running a container, select a local directory where you can keep data that will
+persist between container runs. For example, after editing the starter `.proctor.cfg` file,
+you will want to keep a copy in case the container stops or is killed, e.g., if your machine
+reboots. For our purposes, we'll assume this directory is `/home/me/pdata`.
+
+* Run a container based on the image<br/>
+`docker run -it -v /home/me/pdata:/data proctor`
+
+* Edit the configuration file<br/>
+`vim /root/.proctor.cfg`
+
+* Supply values for the following keys. Note that you can find information about these keys
+and what they do in the section _Configuration File Details_
+    * `group_path_prefix`
+    * `private_token`
+    * `smtp_user`
+    * `smtp_pwd`
+
+* You can optionally fill in or change the values for and and all the `default_` keys in
+the supplied `[Projects]` section.
+
+* Add sections for assignments you want to grade
+    * You can treat the configuration file as a living document, and can go update it with
+    assignment information, due dates, etc. in the future. You don't need to do this on initial
+    setup.
+    
+After you've made your initial updates to the configuration file, make a copy to the /data directory.
+This will ensure access to it should your container meet an untimely shutdown.<br/>
+`cp /root/.proctor.cfg /data`
+
+If all goes well, you should have a copy of `.proctor.cfg` in the `/home/me/pdata` directory on your local machine.
+
+You are now ready to run Proctor, as described below.
+
 
 ## How Proctor Works
 To understand the rest of the this document, it's important to take a few minutes to understand how
@@ -399,6 +454,7 @@ Command | Parameter | Required? | Description
 --- | --- | --- | ---
 **`config`** | | | **Displays basic configuration information**
 | | --verbose | No | Displays basic configuration information and the contents of the configuration file.
+| | --file | No | Enables you to specify a specific configuration for Proctor to use when it runs
 **`glping`** | | | **Verifies communication with and access to the GitLab server**
 **`projects`** | | | **Lists projects**
 | | --email | Yes| User/owner email for which to find projects, e.g., email=puopoloj1@wit.edu
@@ -418,10 +474,11 @@ Command | Parameter | Required? | Description
 
 #### Command Examples
 The following examples demonstrate all of Proctor's valid commands and their associated parameters.
-Assume the command begins with `python proctor.py `
+Assume each command begins with `python3 proctor.py `
 ```
 $ config
 $ config --verbose
+$ config --file=/Users/me/proctor-app.config
 $ glping
 $ projects --email=studentx@wit.edu
 $ clone --project=pa1-review-student-master --emails=proctor_wd/comp1050.txt

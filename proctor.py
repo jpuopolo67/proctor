@@ -34,13 +34,15 @@ class Proctor:
         if Proctor.is_command_config():
             try:
                 scmd = ' '.join(sys.argv)
-                pattern = '--file.(\S*)'
-                m = re.search(pattern, scmd)
+                m = re.search('--file', scmd)
+                if not m:
+                    return None
+                m = re.search('--file.(\S*)', scmd)
                 if m:
                     config_file = m[1]
-                if not (Path(config_file).is_file()):
-                    termcolor.cprint('Specified config file does not exist or cannot be found.', 'red')
-                    sys.exit(-1)
+                    if not (Path(config_file).is_file()):
+                        termcolor.cprint('Specified config file does not exist or cannot be found.', 'red')
+                        sys.exit(-1)
             except Exception as ex:
                 termcolor.cprint('Missing or invalid --file parameter. Please try again.', 'red')
                 sys.exit(-1)
