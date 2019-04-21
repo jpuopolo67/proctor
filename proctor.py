@@ -1,6 +1,7 @@
 import argparse
 import sys
 import os
+import re
 import termcolor
 from pathlib import Path
 from pconfig import ProctorConfig
@@ -17,6 +18,34 @@ from postman import Postman
 
 class Proctor:
     """Proctor enables WIT instructors to clone, build, test and grade Java-based projects."""
+
+    @staticmethod
+    def is_command_config():
+        """Indicates if the Proctor command is 'config' as entered by the user. If so, we need
+        to check to see if the user if providing a config file that overrides the default.
+        :return: True if the command is 'config'"""
+        return sys.argv[1]
+
+    @staticmethod
+    def get_config_file():
+        """Pulls the config file from the user-entered command, if available.
+        :returns Configuration file that the user specificed when running Proctor, or None if not specified."""
+        config_file = None
+        if Proctor.is_command_config():
+            try:
+                scmd = ' '.join(sys.argv)
+                pattern = '--file.(\S*)'
+                m = re.search(pattern, scmd)
+                if m:
+                    config_file = m[1]
+                if not (Path(config_file).is_file()):
+                    termcolor.cprint('Specified config file does not exist or cannot be found.', 'red')
+                    sys.exit(-1)
+            except Exception as ex:
+                termcolor.cprint('Do not understand config --file parameter. Please try again.', 'red')
+                sys.exit(-1)
+
+        return config_file
 
     def __init__(self):
         """Initializes the Proctor"""
@@ -48,6 +77,7 @@ class Proctor:
 
         # config
         parser_config = subparsers.add_parser('config', help='display basic configuration information')
+        parser_config.add_argument("--file", help='forces Proctor to use the given configuration file', required=False)
         parser_config.add_argument("--verbose", help="display entire configruation file", action="store_true")
 
         # glping (GitLab ping)
@@ -281,7 +311,8 @@ if __name__ == "__main__":
         termcolor.cprint("usage: proctor.py [-h] {config, glping, clone, grade, group}", color='red')
         sys.exit(-1)
 
-    ProctorConfig.init()
+    config_file = Proctor.get_config_file() # Will use user-entered config, if available
+    ProctorConfig.init(config_file)
     p = Proctor()
     p.process_command()
     p.done()
