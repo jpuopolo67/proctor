@@ -29,6 +29,9 @@ Proctor enables you to perform the following actions:
 Before we dive into how to do these things, let's set up your environment and get a 
 copy of the application up and running.
 
+### No Eclipse Necessary
+Proctor does not rely on any particular Java IDE or environment. So long as the required SDKs, e.g., Java 8,
+Python 3, etc. are set up correctly, you do not need Eclipse or any specific Java tooling.
 
 ## Setting up Your Enviroment
 Before you can run Proctor, you need a working environment. Specifically, you need 
@@ -39,7 +42,7 @@ the following SDKs and associated run-times installed on your computer:
 * Git (most recent)
 * Python 3.6 or higher. All references to Python hereafter assume 3.6 or higher.
 
-Note that you have two choices relative to using Proctor:
+### Local Install or Docker Image (Recommended):
 * You can set up the required tech stack yourself on a local machine or in the cloud
 * You can download and use a preconfigured Docker image
 
@@ -48,8 +51,7 @@ rather use the Docker image, you can skip directly to the section _Using a Docke
 
 ### Download, Install and Configure Java & JUnit
 Because Proctor is designed to help grade Java and JUnit-based projects, you need to have
-the Java SDK installed, as well as a copy of JUnit. Proctor will use the tools installed
-with the JDK and JUnit to build and test projects.
+the Java SDK installed, as well as a copy of JUnit. Proctor will use these tools  to build and test projects.
 
 * [Java JDK Download](https://www.oracle.com/technetwork/java/javase/downloads/index.html)
 * [JUnit 4.x Download](https://junit.org/junit4/)
@@ -342,6 +344,9 @@ This section describes the configuration file in detail.
 If Proctor does not find the configuration file in your home directory, it will attempt to use
 the current working directory.
 
+You can also specify a configuration file to use, per run, with the `config --file` switch, explained
+in the _Commands & Parameters_ section.
+
 ### Format
 The configuration file uses a simple INI format, consisting of one or more sections, each
 containing zero or more name-value pairs. For example:
@@ -446,7 +451,7 @@ but hey, never say never.
 ## Running Proctor
 Now that you have Proctor configured, it's time to run this bad boy.
 
-### Command & Paramters
+### Command & Parameters
 This sections describes each command, its parameters, and what happens when you execute it. Note that many
 of the command use information from the configuration file. 
 
@@ -476,17 +481,19 @@ Command | Parameter | Required? | Description
 The following examples demonstrate all of Proctor's valid commands and their associated parameters.
 Assume each command begins with `python3 proctor.py `
 ```
-$ config
-$ config --verbose
-$ config --file=/Users/me/proctor-app.config
-$ glping
-$ projects --email=studentx@wit.edu
-$ clone --project=pa1-review-student-master --emails=proctor_wd/comp1050.txt
-$ clone --project=oop3-cli --emails=mystudents.txt --force
-$ grade --project=pa1-review-student-master --emails=mydir/mystudents.txt 
-$ grade --project=someproject --emails=allstudents.txt --chide
-$ group create --groupname=extracredit
-$ group append --groupname=extracredit --emails=students.txt
+$ python3 proctor.py...
+
+    $ config
+    $ config --verbose
+    $ config --file=/Users/me/proctor-app.config
+    $ glping
+    $ projects --email=studentx@wit.edu
+    $ clone --project=pa1-review-student-master --emails=proctor_wd/comp1050.txt
+    $ clone --project=oop3-cli --emails=mystudents.txt --force
+    $ grade --project=pa1-review-student-master --emails=mydir/mystudents.txt 
+    $ grade --project=someproject --emails=allstudents.txt --chide
+    $ group create --groupname=extracredit
+    $ group append --groupname=extracredit --emails=students.txt
  ```
  
 ## Future Enhancements
