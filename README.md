@@ -326,12 +326,13 @@ of course, that
 you've included all 25 emails in the file that you used to execute the grading run.
 
 ### Managing Groups
-* ADD TO DIAGRAM and EXPLAIN HERE
+GitLab groups allow you to group projects into directories and give users access to several projects at once.
+You may find it convenient to do for your various classes adn sections. 
 
-Now that we have a high-level understanding of how Proctor works, we're ready to get into the details
-of configuring it. 
- 
- 
+Because adding groups and people to groups using the native GitLab Web interface is a little slow 
+and cumbersome, Proctor offers a few convenience commands, `group create` and `group append`. You
+can find the details and switches in the _Commands & Parameters_ section.
+
 ## Configuring Proctor
 Proctor uses <b>a single configuration file</b> to enable it do it's job. Both the GitLab repo
 and the Docker image ship with a basic configuration file that you'll need to edit. 
