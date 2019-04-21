@@ -311,8 +311,8 @@ if __name__ == "__main__":
         termcolor.cprint("usage: proctor.py [-h] {config, glping, clone, grade, group}", color='red')
         sys.exit(-1)
 
-    config_file = Proctor.get_config_file() # Will use user-entered config, if available
-    ProctorConfig.init(config_file)
+    cmdline_config_file = Proctor.get_config_file()
+    ProctorConfig.init(cmdline_config_file)
     p = Proctor()
     p.process_command()
     p.done()
