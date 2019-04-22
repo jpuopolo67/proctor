@@ -29,9 +29,7 @@ Proctor enables you to perform the following actions:
 Before we dive into how to do these things, let's set up your environment and get a 
 copy of the application up and running.
 
-### No Eclipse Necessary
-Proctor does not rely on any particular Java IDE or environment. So long as the required SDKs, e.g., Java 8,
-Python 3, etc. are set up correctly, you do not need Eclipse or any specific Java tooling.
+
 
 ## Setting up Your Enviroment
 Before you can run Proctor, you need a working environment. Specifically, you need 
@@ -41,6 +39,10 @@ the following SDKs and associated run-times installed on your computer:
 * JUnit 4.x. The application was tested with JUnit 4.12. 
 * Git (most recent)
 * Python 3.6 or higher. All references to Python hereafter assume 3.6 or higher.
+
+### No Eclipse Necessary
+Proctor does not rely on any particular Java IDE or tooling. As long as the required SDKs, e.g., Java 8,
+Python 3, etc. are set up correctly, you do not need Eclipse or any additional Java tools.
 
 ### Local Install or Docker Image (Recommended):
 * You can set up the required tech stack yourself on a local machine or in the cloud
@@ -146,10 +148,20 @@ To use Proctor's Docker image:
 * Download the image from the Docker Hub registry:<br/>
 `docker pull jpuopolo/proctor`
 
-When you run a container based on this image, you will find several directories:
+Before running a container based on this image, select a _local directory on your host_  
+where you can keep data that will persist between container runs. For example, after editing 
+the starter `.proctor.cfg` file, you will want to keep a copy in case the container stops or is 
+killed, e.g., if your machine reboots. For our purposes, we'll assume this directory is `/home/me/pdata`.
+
+* Run a container based on the image<br/>
+`docker run -it -v /home/me/pdata:/data proctor`
+
+The container that Docker creates is preconfigured with the software you need, a starter 
+`.proctor.cfg` file, and set of directories:
+
 * `/root` 
-    * You run the container as user _root_. You will find a starter `.proctor.cfg` in this directory.
-    You will need to edit this file and supply some values, discussed shortly.
+    * You run the container as user _root_. You will find the starter `.proctor.cfg` in this directory.
+    You need to edit this file and supply some values, discussed shortly.
 * `/home/proctor`
     * This is where Proctor's source code lives. You can run the application from this directory.
 * `/home/proctor/work`
@@ -157,18 +169,10 @@ When you run a container based on this image, you will find several directories:
 * `/data`
     * This is the directory to use to retain data between container runs, e.g., your edited 
     `.proctor.cfg` file. Each time you create a container based on the Proctor image, you will lose the
-    edits to your configuration file, so you'll want a copy of the edited, "good" one. We
-    discuss this in more detail here.
-
-Before running a container, select a local directory where you can keep data that will
-persist between container runs. For example, after editing the starter `.proctor.cfg` file,
-you will want to keep a copy in case the container stops or is killed, e.g., if your machine
-reboots. For our purposes, we'll assume this directory is `/home/me/pdata`.
-
-* Run a container based on the image<br/>
-`docker run -it -v /home/me/pdata:/data proctor`
+    edits to your configuration file, so you'll want a copy of the edited, "good" one.
 
 * Edit the configuration file<br/>
+The image ships with _vim_, a popular editor on Linux and Mac, also available on Windows.<br/>
 `vim /root/.proctor.cfg`
 
 * Supply values for the following keys. Note that you can find information about these keys
@@ -178,26 +182,27 @@ and what they do in the section _Configuration File Details_
     * `smtp_user`
     * `smtp_pwd`
 
-* You can optionally fill in or change the values for and and all the `default_` keys in
-the supplied `[Projects]` section.
+* You can optionally fill in or change the values for the `default_` keys in
+the `[Projects]` section of the configuration file.
 
-* Add sections for assignments you want to grade
-    * You can treat the configuration file as a living document, and can go update it with
-    assignment information, due dates, etc. in the future. You don't need to do this on initial
-    setup.
+* Add `[<assignment section>]` for each assignment you want to grade
+    * You can (and probably should) treat the configuration file as a living document. You can 
+    update it with assignment information, due dates, etc. in the future. You don't need to do 
+    all of this on initial setup.
     
 After you've made your initial updates to the configuration file, make a copy to the /data directory.
-This will ensure access to it should your container meet an untimely shutdown.<br/>
+Having a copy will ensure access to it, should your container meet an untimely death.<br/>
 `cp /root/.proctor.cfg /data`
 
-If all goes well, you should have a copy of `.proctor.cfg` in the `/home/me/pdata` directory on your local machine.
+If all goes well, you should have a copy of `.proctor.cfg` in the `/home/me/pdata` directory on your 
+local machine. **Note:** Repeat this copy step any time you make a change to `/root/.proctor.cfg`.
 
-You are now ready to run Proctor, as described below.
+You are now ready to run Proctor!
 
 
 ## How Proctor Works
-To understand the rest of the this document, it's important to take a few minutes to understand how
-Proctor works and the assumptions it makes. First, let's take a look at the basic workflow:
+Before we move on, it's important to take a few minutes to understand how
+Proctor works. First, let's take a look at the basic workflow:
 
 ![Proctor Workflow](http://wit.jpuopolo.us/wp-content/uploads/2019/04/proctor-cmds.png)
 
@@ -217,7 +222,7 @@ for a user ID and password. You can find your private token in your GitLab accou
 You will provide your private token in Proctor's configuration file, discussed in the next section.
 
 ### Using the Local Working Directory
-The working directory is the root directory on your local machine where Proctor keeps its log files and to
+The _working directory_ is the root directory on your local machine where Proctor keeps its log files and to
 which it clones projects. For purposes of this document, let's suppose we have a directory called 
 `~/procotor/wd` as the working directory.
 
@@ -345,9 +350,6 @@ This section describes the configuration file in detail.
 If Proctor does not find the configuration file in your home directory, it will attempt to use
 the current working directory.
 
-You can also specify a configuration file to use, per run, with the `config --file` switch, explained
-in the _Commands & Parameters_ section.
-
 ### Format
 The configuration file uses a simple INI format, consisting of one or more sections, each
 containing zero or more name-value pairs. For example:
@@ -452,7 +454,7 @@ but hey, never say never.
 ## Running Proctor
 Now that you have Proctor configured, it's time to run this bad boy.
 
-### Command & Parameters
+### Commands & Parameters
 This sections describes each command, its parameters, and what happens when you execute it. Note that many
 of the command use information from the configuration file. 
 
@@ -460,7 +462,6 @@ Command | Parameter | Required? | Description
 --- | --- | --- | ---
 **`config`** | | | **Displays basic configuration information**
 | | --verbose | No | Displays basic configuration information and the contents of the configuration file.
-| | --file | No | Enables you to specify a specific configuration for Proctor to use when it runs
 **`glping`** | | | **Verifies communication with and access to the GitLab server**
 **`projects`** | | | **Lists projects**
 | | --email | Yes| User/owner email for which to find projects, e.g., email=puopoloj1@wit.edu
@@ -486,7 +487,6 @@ $ python3 proctor.py...
 
     $ config
     $ config --verbose
-    $ config --file=/Users/me/proctor-app.config
     $ glping
     $ projects --email=studentx@wit.edu
     $ clone --project=pa1-review-student-master --emails=proctor_wd/comp1050.txt
