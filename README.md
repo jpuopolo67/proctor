@@ -1,6 +1,7 @@
 # Proctor!
 
 ## User Guide
+Last update: 2019-Apr-23
 
 ## Welcome
 _Proctor_ is a Python 3.6 command-line application that enables you to grade Java-based projects. 
@@ -19,30 +20,33 @@ cost of fewer features.
 
 ## What Can I Do with Proctor?
 Proctor enables you to perform the following actions:
-* Display basic and verbose configuration information about the application
+* Display application configuration information
 * Verify access to a GitLab server
 * List projects owned by a given user
-* Clone Java projects from a GitLab server to your local machine
-* Grade Java projects that you've cloned
+* Clone projects from a GitLab server to your local machine
+* Grade projects that you've cloned
 * Manage groups on a GitLab server
 
-Before we dive into how to do these things, let's set up your environment and get a 
+Before we dive into _how_ to do these things, let's set up your environment and get a 
 copy of the application up and running.
 
-## Setting up Your Enviroment
+## Setting Up Your Enviroment
 Before you can run Proctor, you need a working environment. Specifically, you need 
 the following SDKs and associated run-times installed on your computer:
 
 * Java 8 or higher. All references to Java hereafter assume 8 or higher.
 * JUnit 4.x. The application was tested with JUnit 4.12. 
-* Git (most recent)
 * Python 3.6 or higher. All references to Python hereafter assume 3.6 or higher.
+* Git (most recent)
 
 ### No Eclipse Necessary
-Proctor does not rely on any particular Java IDE or tooling. As long as the required SDKs, e.g., Java 8,
-Python 3, etc. are set up correctly, you do not need Eclipse or any additional Java tools.
+Proctor does not rely on any particular Java IDE or tooling. So long as the required SDKs, e.g., Java 8,
+Python 3, etc. are installed and set up normally on your local machine, you do not need Eclipse or any additional
+tooling.
 
-### Local Install or Docker Image (Recommended):
+### Local Install or Docker Image (Recommended)
+You have two choices of how to set up the Proctor environment:
+
 * You can set up the required tech stack yourself on a local machine or in the cloud
 * You can download and use a preconfigured Docker image
 

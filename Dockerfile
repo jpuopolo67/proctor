@@ -24,14 +24,14 @@ COPY ./lib/hamcrest-core-1.3.jar .
 # Make a working dir
 WORKDIR /home/proctor/work
 
-# Let's create a basic config file the user can start with
+# Create a basic config file that the user can edit
 WORKDIR /root
 COPY ./basic.cfg ./.proctor.cfg
 
-# Create a volume
+# Create a volume so that user can save config file edits
 VOLUME /data
 
-# Set up ENV variables
+# Set up ENV variables so that we can find the Java tools
 ENV PATH "$PATH:/usr/lib/jvm/java-1.8-openjdk/bin"
 
 # Run when container starts
