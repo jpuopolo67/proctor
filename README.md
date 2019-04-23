@@ -29,8 +29,6 @@ Proctor enables you to perform the following actions:
 Before we dive into how to do these things, let's set up your environment and get a 
 copy of the application up and running.
 
-
-
 ## Setting up Your Enviroment
 Before you can run Proctor, you need a working environment. Specifically, you need 
 the following SDKs and associated run-times installed on your computer:
@@ -226,6 +224,32 @@ The _working directory_ is the root directory on your local machine where Procto
 which it clones projects. For purposes of this document, let's suppose we have a directory called 
 `~/procotor/wd` as the working directory.
 
+### Logging
+Logging in an important part of any application. Proctor uses the Python logging framework and offers
+two related but independent logging streams: the console and a logging file.
+ 
+#### The Console
+You can set the logging level for the console using the `console_log_level` key in the 
+configuration file. Valid values include:
+
+Level | When It's Used
+--- | ---
+`DEBUG` | Detailed information, typically of interest only when diagnosing problems.
+`INFO` | Confirmation that things are working as expected.
+`WARNING` | An indication that something unexpected happened, or indicative of some problem in the near future e.g. ‘disk space low’). The software is still working as expected.
+`ERROR` | Due to a more serious problem, the software has not been able to perform some function.
+`CRITICAL` | A serious error, indicating that the program itself may be unable to continue running.
+
+#### A Logging File
+To capture logging output to a file, you must provide a value for the `logfile_name` key in 
+the configuration file. The log file will appear in Proctor's working directory (see the `working_dir` 
+configuration key). If the file does not exists, it will be created. If it does 
+exist, it will be opened in append mode. The log file captures _all_ logging output, independent of the console.
+
+Note that the log file processor recognizes one special pattern: _YYYYMMDD_. If you include this string
+anywhere in the `logfile_name` value, Proctor will replace it with the actual date. This enables you to
+create log files per diem.
+
 ### Displaying Configuration Information
 To see basic configuration information, execute the `config` command. To display basic information
 plus the contents of the configuration file, add the `--verbose` switch.
@@ -398,7 +422,7 @@ The following is an example of a configured `.proctor.cfg` file:
 [Proctor]
 working_dir = /Users/johnpuopolo/Adventure/proctor_wd
 console_log_level = INFO
-logfile_name = proctor.log
+logfile_name = proctor-YYYYMMDD.log
 
 [GitLabServer]
 url = https://eagle.cs.wit.edu/

@@ -2,6 +2,8 @@ import logging
 import termcolor
 import sys
 import os
+import re
+from datetime import datetime as dt
 
 
 class ProctorLogger:
@@ -37,7 +39,7 @@ class ProctorLogger:
             self._log_level = getattr(logging, console_log_level)
             self._logfile_name = None
             if logfile_name is not None and len(logfile_name) > 0:
-                self._logfile_name = os.sep.join([proctor_working_dir, logfile_name])
+                self._logfile_name = self._determine_logfile_name(proctor_working_dir, logfile_name)
 
             # Access proctor logger, set the log level as "DEBUG" to make sure
             # all log messages are forwarded to handlers
@@ -66,8 +68,14 @@ class ProctorLogger:
                 self._thelogger.addHandler(file_handler)
         except Exception as e:
             termcolor.cprint("Proctor ERROR: Invalid configuration file format or malformed key.", 'red')
-            termcolor.cprint(e, 'red')
+            termcolor.cprint(str(e), 'red')
             sys.exit(0)
+
+    # Helpers
+    def _determine_logfile_name(self, proctor_working_dir, logfile_name):
+        logfile_name = logfile_name.replace("YYYYMMDD", dt.today().strftime('%Y%m%d'))
+        logfile_name = os.sep.join([proctor_working_dir, logfile_name])
+        return logfile_name
 
     # Logging wrappers
     def debug(self, msg, *args, **kwargs):
