@@ -29,7 +29,7 @@ class ProctorLoggerFactory:
     @staticmethod
     def getLogger():
         """Returns the configured logger.
-        :returns The configure logger."""
+        :returns The configured logger."""
 
         # The logger is a singleton
         if ProctorLoggerFactory._the_logger:

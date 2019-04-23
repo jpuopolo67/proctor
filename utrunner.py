@@ -7,6 +7,7 @@ from ploggerfactory import ProctorLoggerFactory
 class UnitTestRunner:
     """Runs JUnit-based tests and parses results"""
     def __init__(self):
+        """Initializes UnitTestRunner"""
         self._logger = ProctorLoggerFactory.getLogger()
 
     def run_instructor_unit_tests(self, email, project_name, dir_to_grade, suite_dir, suite_class):

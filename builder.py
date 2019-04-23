@@ -73,6 +73,11 @@ class Builder:
         return build_errors
 
     def _build_unit_test_classpath(self, project_name, dir_to_grade):
+        """Builds the path to the project's unit tests based on the project name and components
+        specified in the configuration file.
+        :param project_name: Name of the project under test
+        :param dir_to_grade: Full path to the directory that contains the project under test
+        :return The full class path where Java can find the source under test and the tests themselves."""
         # src directory under project/student email
         src_root_dir = os.sep.join([str(dir_to_grade), PathManager.get_project_src_dir_name(project_name)])
 

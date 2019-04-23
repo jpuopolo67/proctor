@@ -73,6 +73,12 @@ class ProctorLogger:
 
     # Helpers
     def _determine_logfile_name(self, proctor_working_dir, logfile_name):
+        """Determines the logfile name to use, based on the [Proctor] logfile_name key in the configuration
+        file. If the logfile name passed contains the pattern YYYYMMDD, this pattern will be replaced by
+        today's date, allowing for per diem log files.
+        :param proctor_working_dir: Full working directory path name
+        :param logfile_name: Name of the logfile name as specified in the configuration file.
+        :return Name of the logfile to use"""
         logfile_name = logfile_name.replace("YYYYMMDD", dt.today().strftime('%Y%m%d'))
         logfile_name = os.sep.join([proctor_working_dir, logfile_name])
         return logfile_name

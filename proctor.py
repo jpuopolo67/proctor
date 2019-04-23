@@ -113,6 +113,7 @@ class Proctor:
             sys.exit(0)
 
     def _display_config_info(self):
+        """Displays basic logging information."""
         p._logger.info(f'Configuration file: {ProctorConfig.config_file}')
         p._logger.info(f'Working directory : {p._working_dir_name}')
         p._logger.info(f'Log file          : {p._logger._logfile_name}')
@@ -120,11 +121,15 @@ class Proctor:
             self._display_config_file()
 
     def _display_config_file(self):
+        """Displays the contents of the configuration file. Note that the contents of the configuration
+        file are not logger and simply displayed on the console."""
         print(f'\n{ProctorConfig.config_file}:')
         with open(ProctorConfig.config_file) as f:
             print(f.read())
 
     def _find_projects_for_owner(self):
+        """Finds and displays the repo URLs for all projects on the GitLab server owned by the
+         email passed in on the command line as part of the --email flag."""
         owner_email = self._argsdict['email']
         num_projects, projects = self._server.get_projects_for_owner(owner_email)
         self._logger.info(f'{owner_email} has {num_projects} projects')
