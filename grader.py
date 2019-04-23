@@ -55,7 +55,7 @@ class Grader:
                 if num_tests_run > 0:
                     grade_info.update({'student_tests_ratio': test_ratio})
                 else:
-                    grade_info.update({'student_tests_ratio', 'No tests run!'})
+                    grade_info.update({'student_tests_ratio': 'No tests run. Check configuration file for proper test suite name.'})
             else:
                 self._logger.warning('Missing unit test class. No tests specified.')
                 grade_info.update({'student_tests_ratio': 'No tests specified. Check configuration file.'})

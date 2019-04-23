@@ -32,7 +32,7 @@ class UnitTestRunner:
 
         # Process the result of running the tests.
         return \
-            self._process_test_results(results)
+            self._process_test_results(suite_class, results)
 
     def run_project_unit_tests(self, email, project_name, dir_to_grade, test_class_name):
         """Runs the project's unit test. Assumes JUnit as testing framework.
@@ -58,9 +58,9 @@ class UnitTestRunner:
 
         # Process the result of running the tests.
         return \
-            self._process_test_results(results)
+            self._process_test_results(test_suite_class, results)
 
-    def _process_test_results(self, results):
+    def _process_test_results(self, test_suite_class, results):
         """Parses the output of the JUnit tests to determine the ratio of passed tests to executed tests.
         :param Byte-stream results captured from stdout and stderr from running JUnit tests
         :returns Tuple (number of tests executed, ratio of tests-passed / tests-executed)"""
@@ -93,7 +93,7 @@ class UnitTestRunner:
             self._logger.info(f'Test results: {tests_passed} / {num_tests_executed} = {test_ratio}')
         except Exception as ex:
             # Something went wrong...
-            self._logger.error('Error while running unit tests: {}'.format(str(ex)))
-            self._logger.error('Check that instructor test suite is compatible with current project under test.')
+            self._logger.warning('Error while running unit tests!')
+            self._logger.warning(f"Check test suite class '{test_suite_class}' exists and is compatible with the project under test.")
 
         return (num_tests_executed, test_ratio)
