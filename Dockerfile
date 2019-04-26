@@ -9,17 +9,21 @@ USER root
 RUN apk update
 RUN apk add openjdk8 python3 vim git
 
+# Copy JUnit 4.x libs
+WORKDIR /home/proctor/lib
+COPY ./lib/junit4.jar .
+COPY ./lib/hamcrest-core-1.3.jar .
+
 # Copy Python source to container and run deps
 WORKDIR /home/proctor
 COPY README.md .
 COPY *.py ./
 COPY requirements.txt .
+RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 
-# Copy JUnit 4.x libs
-WORKDIR /home/proctor/lib
-COPY ./lib/junit4.jar .
-COPY ./lib/hamcrest-core-1.3.jar .
+# Make proctor.py a runnable app
+RUN chmod +x proctor.py
 
 # Make a working dir
 WORKDIR /home/proctor/work
@@ -32,7 +36,7 @@ COPY ./basic.cfg ./.proctor.cfg
 VOLUME /data
 
 # Set up ENV variables so that we can find the Java tools
-ENV PATH "$PATH:/usr/lib/jvm/java-1.8-openjdk/bin"
+ENV PATH "$PATH:home/proctor:/usr/lib/jvm/java-1.8-openjdk/bin"
 
 # Run when container starts
 WORKDIR /home/proctor

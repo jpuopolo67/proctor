@@ -1,7 +1,7 @@
 # Proctor!
 
 ## User Guide
-Last update: 2019-Apr-23
+_Last update: 2019-Apr-23_
 
 ## Welcome
 _Proctor_ is a Python 3.6 command-line application that enables you to grade Java-based projects. 
@@ -27,8 +27,29 @@ Proctor enables you to perform the following actions:
 * Grade projects that you've cloned
 * Manage groups on a GitLab server
 
-Before we dive into _how_ to do these things, let's set up your environment and get a 
-copy of the application up and running.
+### How Proctor Works
+Before we move on, it's important to take a few minutes to understand how
+Proctor works. First, let's take a look at the basic workflow:
+
+![Proctor Workflow](http://wit.jpuopolo.us/wp-content/uploads/2019/04/workflow-1.png)
+
+In order for Proctor to work correctly, it needs access to a GitLab server so that it can 
+clone projects and fetch metadata such as a project's last commit date.
+Make sure you have network access to the GitLab server and that you have a valid, active account. 
+
+The basic workflow is as follows:
+1. Verify your connection to the GitLab server: `proctor glping`
+2. Clone a project for a set of students: `proctor clone --project=pa --emails=students.txt` 
+3. Grade a project for a set of students: `proctor grade --project=pa --emails=students.txt`
+4. Manage server groups: `proctor group create --groupname=cs2-fall19`
+   <br/>Add students to a group: `proctor group append --groupname=cs2-fall19 --emails=students.txt`
+
+We discuss each of these in greater detail throughout this document.
+
+When dealing with groups of students and multiple class sections on
+the GitLab server, it's useful to be able to grant permissions on a group basis.
+Proctor supplies a few convenience commands to create groups, but does attempt to replicate 
+all of GitLab's group-management features. 
 
 ## Setting Up Your Enviroment
 Before you can run Proctor, you need a working environment. Specifically, you need 
@@ -38,20 +59,22 @@ the following SDKs and associated run-times installed on your computer:
 * JUnit 4.x. The application was tested with JUnit 4.12. 
 * Python 3.6 or higher. All references to Python hereafter assume 3.6 or higher.
 * Git (most recent)
+* _Optional:_ Docker (most recent)
 
 ### No Eclipse Necessary
 Proctor does not rely on any particular Java IDE or tooling. So long as the required SDKs, e.g., Java 8,
 Python 3, etc. are installed and set up normally on your local machine, you do not need Eclipse or any additional
 tooling.
 
-### Local Install or Docker Image (Recommended)
+### Local Install or Docker Image
 You have two choices of how to set up the Proctor environment:
 
 * You can set up the required tech stack yourself on a local machine or in the cloud
-* You can download and use a preconfigured Docker image
+* You can download and use a preconfigured Docker image (recommended)
 
 The following directions explain how to set up a local environment. If you'd
-rather use the Docker image, you can skip directly to the section _Using a Docker Image_.
+rather use the Docker image, you can skip directly to the section 
+[_Using a Docker Image_](#using-a-docker-image)
 
 ### Download, Install and Configure Java & JUnit
 Because Proctor is designed to help grade Java and JUnit-based projects, you need to have
@@ -91,8 +114,8 @@ installation step.
 
 #### Create New Virtual Environment
 * From a terminal window, create a virtual environment based on Python 3.6 or above. 
-You can name your virtual environment whatever you'd like. An obvious and useful choice is 'proctor.'
-I will assume that is the name you've chosen in the following examples.
+You can name your virtual environment whatever you'd like. An obvious and useful choice is _proctor_.
+I will assume that is the name you've chosen in the following example:
 
  * `conda create -n proctor python=3.6 anaconda`
  
@@ -104,7 +127,6 @@ Because you can have multiple virtual environments on your machine, you need to 
 one in which to work. This is called your _active environment_. The active environment
 governs where subsequent Python packages and source code get installed. Packages installed 
 into one virtual environment are isolated from those in all other virtual environments. 
-Along these lines, it's important to have an active environment in which to work. 
 
 If you are using miniconda, run the following commands:
 * `conda env list` will display a list of existing environments
@@ -143,42 +165,45 @@ the following:
 * VIM editor
 
 This Docker image was created for Linux-based systems and is not compatiable with Windows.
-
-To use Proctor's Docker image:
+To use this image:
 
 * Make sure you have [Docker](https://www.docker.com/) installed and running on your local machine
 * Download the image from the Docker Hub registry:<br/>
 `docker pull jpuopolo/proctor`
 
-Before running a container based on this image, select a _local directory on your host_  
-where you can keep data that will persist between container runs. For example, after editing 
-the starter `.proctor.cfg` file, you will want to keep a copy in case the container stops or is 
-killed, e.g., if your machine reboots. For our purposes, we'll assume this directory is `/home/me/pdata`.
+Before running a container based on this image, select a _local directory on your host_ where you can 
+keep data that will persist between container runs. After editing the starter `.proctor.cfg` file, you 
+will want to keep a separate copy in case the container stops or dies, e.g., if your machine reboots. 
+For our purposes, we'll assume this directory is `/home/me/pdata`.
 
-* Run a container based on the image<br/>
-`docker run -it -v /home/me/pdata:/data proctor`
+* Run a container based on the image using the _-v_ option<br/><br/>
+`docker run -it -v /home/me/pdata:/data proctor`<br/>
 
-The container that Docker creates is preconfigured with the software you need, a starter 
-`.proctor.cfg` file, and set of directories:
+    * The docker image makes the `proctor.py` file executable, so you can enter<br/>
+`proctor.py cmd --parameters`
 
-* `/root` 
-    * You run the container as user _root_. You will find the starter `.proctor.cfg` in this directory.
-    You need to edit this file and supply some values, discussed shortly.
-* `/home/proctor`
-    * This is where Proctor's source code lives. You can run the application from this directory.
-* `/home/proctor/work`
-    * This is Proctor's default working directory, where cloned projects and log files live.
-* `/data`
-    * This is the directory to use to retain data between container runs, e.g., your edited 
-    `.proctor.cfg` file. Each time you create a container based on the Proctor image, you will lose the
-    edits to your configuration file, so you'll want a copy of the edited, "good" one.
+    * The container that Docker creates is preconfigured with all of the software you need, 
+a starter `.proctor.cfg` file, and the following directories:
+
+    * `/root` 
+        * You will find the starter `.proctor.cfg` in this directory. You need to edit this file and 
+        supply some values, discussed shortly.
+    * `/home/proctor`
+        * Location of Proctor's source code. You run the application from this directory.
+    * `/home/proctor/work`
+        * Proctor's default working directory, where cloned projects and log files live.
+    * `/data`
+        * Directory used to retain data between container runs, e.g., your edited 
+    `.proctor.cfg` file.<br/>Each time you create a container based on the Proctor image, you will lose the
+    edits to your configuration file, so you'll want a copy of the edited one that you can copy from `/data`
+    back to `/root`.
 
 * Edit the configuration file<br/>
-The image ships with _vim_, a popular editor on Linux and Mac, also available on Windows.<br/>
-`vim /root/.proctor.cfg`
+`vim /root/.proctor.cfg`<br/>
+    * The image ships with _vim_, a popular text editor.
 
 * Supply values for the following keys. Note that you can find information about these keys
-and what they do in the section _Configuration File Details_
+and what they do in the section [_Configuration File Details_](#configuration-file-details)
     * `group_path_prefix`
     * `private_token`
     * `smtp_user`
@@ -192,40 +217,152 @@ the `[Projects]` section of the configuration file.
     update it with assignment information, due dates, etc. in the future. You don't need to do 
     all of this on initial setup.
     
-After you've made your initial updates to the configuration file, make a copy to the /data directory.
-Having a copy will ensure access to it, should your container meet an untimely death.<br/>
-`cp /root/.proctor.cfg /data`
+After you've made your initial updates to the configuration file, make a copy to the `/data` directory:<br/>
+`cp /root/.proctor.cfg /data`<br/>
 
-If all goes well, you should have a copy of `.proctor.cfg` in the `/home/me/pdata` directory on your 
-local machine. **Note:** Repeat this copy step any time you make a change to `/root/.proctor.cfg`.
+You will now have a copy of `.proctor.cfg` in your host's `/home/me/pdata` directory. 
+Having a copy will prove useful should your container meet an untimely death (_maniacal laughter here_).<br/>
 
-You are now ready to run Proctor!
+**Note: Repeat this copy step any time you make a change to `/root/.proctor.cfg`.**
 
 
-## How Proctor Works
-Before we move on, it's important to take a few minutes to understand how
-Proctor works. First, let's take a look at the basic workflow:
+# Configuring Proctor
+Proctor uses a **single configuration file** to enable it do it's job. Both the GitLab repo
+and the Docker image ship with a basic configuration file that you'll need to edit. 
+This section describes the configuration file in detail.
 
-![Proctor Workflow](http://wit.jpuopolo.us/wp-content/uploads/2019/04/proctor-cmds.png)
+### Name 
+* Name the configuration file `.proctor.cfg`
+* Put `.proctor.cfg` in your home directory, e.g., `~` on Linux and MacOS 
 
-Note that managing groups is orthoginal to cloning and building projects and is included
-as a convenience. When dealing with groups of students and multiple class sections on
-the GitLab server, it's useful to be able to grant permissions on a group basis.
+If Proctor does not find the configuration file in your home directory, it will attempt to use
+the shell's current working directory.
 
-Before we get into _how_ to do these things, let's discuss some important concepts
-that will help us understand the application holistically. 
+### Format
+The configuration file uses a simple [INI format](https://en.wikipedia.org/wiki/INI_file), 
+consisting of one or more sections, each containing zero or more name-value pairs. For example:
+
+> ; Generic format
+> [Section] <br/>
+> key1 = value1 <br/>
+> key2 = value2
+>
+> ; Example
+> [GitLabServer] <br/>
+> url = https://eagle.cs.wit.edu/
+
+### Configuration File Details
+The configuration file is critical. It contains all of the information Proctor needs
+to function properly. The following table explains the valid sections, the keys and 
+their meaning, and how to use them.
+
+Section & Key Name | Value Description
+--- | ---
+**`[Proctor]`** | **Application-level configuration** |
+`working_dir` | Name of Proctor's working directory, to which it clones git repos and writes log files.
+`console_log_level` | Log level threshold. Messages at this level or greater appear in the console output. Uses the [Python logging levels](https://docs.python.org/3/library/logging.html). Set this value to `DEBUG` to see all log messages, `INFO` see to general messages and hide low-level details (recommended), and higher values to see only warnings, errors, and critical errors.  
+`logfile_name` | Name of file that captures all logging output, created in Proctor's `working_dir`. Supports _YYYYMMDD_ date replacement. Captures all logging information. To suppress file logging, remove the key or provide no value.
+**`[GitLabServer]`** | **GitLab Server endpoint and login information** 
+`url` | URL to the GitLab server that houses projects. You must have a valid account on this server, of course.
+`group_path_prefix` | Every group on the GitLab server is associated with a directory structure. The prefix is a unique moniker under which group elements are created, preventing conflicts (much like we use com.xyz to name Java packages). Suggest using your WIT username.
+**`[GitLabUser]`** | **User login information**
+`private_token` | Private token associated with your GitLab user account. To find your private token, log into GitLab and look under [Profile Settings](https://eagle.cs.wit.edu/profile/account).
+**`[Projects]`** | **Information about default paths to source code, package names, and test suites.**
+`default_src_dir` | Name of the subdirectory that contains the source code for students' projects. Most projects use `src` and store all source code, including unit tests, under this directory. 
+`default_src_package` | Name of the package used by projects, e.g., `edu.wit.cs.comp1050`, relative to the `default_src_dir`. 
+`default_student_test_suite` | Fully qualified name of the Java test suite class, relative to the `default_src_dir`.
+`default_instructor_test_suite_dir` | Path to the directory where instructor's unit tests are stored.
+`default_instuctor_test_suite` | Fully qualified name of the instructor's Java test suite class, relative to `default_instructor_test_suite_dir`.
+`java_classpath` | Java _classpath_ value to use when building and running Java programs. If absent, Proctor determines the value from the `CLASSPATH` environment variable, if set,  or from various working directories if not.
+`junit_classpath` | Path that includes the two JUnit JAR files required to run JUnit 4.x tests. 
+**`[SMTP]`** | **SMTP login and port information**
+`smtp_host` | URL or IP address to the SMTP server used to send emails
+`smtp_port` | Port to use to communicate with the SMTP server
+`smtp_user` | Your WIT email address
+`smtp_password` | Your WIT email password 
+**`<[project-name]>`** | **One section per project, e.g., `[pa1-review-student-master]`**
+`due_dt` | Project's due date and time in UTC format. Proctor compares this value to the project's last commit date on the server to determine timeliness.
+`src_dir`<br/>`student_test_suite`<br/>...| Project-specific overrides of the `[Projects]` `default_` keys. 
+
+**We discuss these keys in more detail in the relevant sections below.**
+ 
+
+#### Example
+The following is an example of a configured `.proctor.cfg` file:
+
+```
+[Proctor]
+working_dir = /Users/johnpuopolo/Adventure/proctor_wd
+console_log_level = INFO
+
+; Pattern YYYYMMDD is replaced by date on which you run Proctor
+logfile_name = proctor-YYYYMMDD.log
+
+[GitLabServer]
+url = https://eagle.cs.wit.edu/
+group_path_prefix = puopoloj1
+
+[GitLabUser]
+private_token = ***
+
+[Projects]
+default_src_dir = src
+default_src_package = edu.wit.cs.comp1050
+default_student_test_suite = edu.wit.cs.comp1050.tests.TestSuite
+default_instructor_test_suite_dir = {Proctor.working_dir}/grading
+default_instructor_test_suite = edu.wit.cs.comp1050.grading.GradingSuite
+
+; Java-specific keys
+java_classpath =
+junit_path = {Proctor.working_dir}/JUnitRunner/lib/junit-4.12.jar:{Proctor.working_dir}/JUnitRunner/lib/hamcrest-core-1.3.jar
+
+[SMTP]
+smtp_host = smtp.office365.com
+smtp_port = 587
+smtp_user = puopoloj1@wit.edu
+smtp_pwd = ***
+
+[pa1-review-student-master]
+due_dt = 2019-03-05T16:00:00-0500
+
+[pa3-oopcli-student-master]
+due_dt = 2018-03-24T00:00:00-0500
+```
+
+Note that the configuration file supports intelligent replacement values. In the sample
+above, we see that the `junit_path` contains `{Proctor.working_dir}`.
+This tells the configuration manager to replace `{Proctor.working_dir}` with the value of
+the `working_dir` key found in the `Proctor` section. 
+
+### Project Overrides
+At the end of the configuration file, can add one section per project. In the example above, we see `[pa1-review-student-master]` 
+and `[pa3-oopcli-student-master]`. In addition to the `due_dt` key, these project
+sections can contain project-specific keys that override the associated `[Projects]` defaults.
+
+Here's how it works. When Proctor needs to determine a value for a given project, e.g., 
+the source package (`src_package`), it checks the project's section, e.g., `[pa1-review-student-master]`
+for the key. In this example, it would check `[pa1-review-student-master]` for the 
+`src_package` key. If it finds it, it uses it. If not, Proctor will prepend the key name with `default_` and
+check to see if that key (`default_src_package`) appears in the `[Projects]` section. 
+
+So, Proctor always checks the individual project section first. If it can't find the key there, it 
+will add `default_` to the beginning of the key name and then check the `[Projects]` section. In this way, individual
+projects can override the general defaults on a per-key basis. You will most likely do this if
+you supply your own (instructor) unit tests as part of the grading process, discussed shortly.
+
+## Running Proctor
 
 ### Logging In 
-Proctor can manage groups on and download (clone) projects from the GitLab server via the GitLab API. 
-To use the API, Proctor needs to log into the GitLab server with valid credentials. To do this, Proctor
-uses the private token associated with your GitLab account. The private token is a secure replacement 
-for a user ID and password. You can find your private token in your GitLab account under 
-[Profile Settings](https://eagle.cs.wit.edu/profile/account). 
+Proctor communicates with the GitLab server via the GitLab API. The WIT GitLab server, at the time of this
+writing, is configured to use the GitLab 3.x API. 
+To use the API, Proctor needs valid credentials, represented by your _private token_. 
+The private token is a secure replacement for a basic user ID and password. You can find your 
+private token in your GitLab account under [Profile Settings](https://eagle.cs.wit.edu/profile/account). 
 You will provide your private token in Proctor's configuration file, discussed in the next section.
 
 ### Using the Local Working Directory
-The _working directory_ is the root directory on your local machine where Proctor keeps its log files and to
-which it clones projects. For purposes of this document, let's suppose we have a directory called 
+The _working directory_ is a directory on local machine where Proctor keeps its log files and to
+which it clones projects. For purposes of this document, we'll assume 
 `~/procotor/wd` as the working directory.
 
 ### Logging
@@ -318,8 +455,8 @@ attempt to build the instructor's test suite. The instructor will have had compi
 
 In general, the instructor can build his/her unit test suite against any one of the projects
 under consideration. For example, let's suppose we are grading _TheProject_ and have cloned it
-for 2 students: _s1@wit.edu_ and _s2@wit.edu_. We can build our test suite, e.g., _GradingSuite_, against
-either student's _TheProject_ - it makes no difference. The compilation step simply needs compile-time 
+for 2 students: s1@wit.edu and s2@wit.edu. We can build our test suite, e.g., _GradingSuite_, against
+_either_ student's _TheProject_ - it makes no difference. The compilation step simply needs compile-time 
 references to the classes that will be tested.
 
 To emphasize the point, the instructor's tests do not need to be copied to the project/source code
@@ -344,168 +481,38 @@ Column Name | Type | Description | Example
 **`latest_commit_dt`** | datetime | Date and time of most recent Git commit from server | 2019-03-04T13:27:09-0500
 **`is_ontime`** | boolean | True if the project latest commit <= due date | TRUE
 **`days`** | integer | Number of days difference between latest commit and due date. If project on time, this is the number of days early, otherwise it's the number of days late. | 4
-**`hours`** | integer | Number of hours (sans days) difference between latest commit and due date. If project on time, this is the number of hours early, otherwise it's the number of hours late. | 11
-**`mins`** | integer | Number of minutes (sans days and hours) difference between latest commit and due date. If project on time, this is the number of minutes early, otherwise it's the number of minutes late. | 22
+**`hours`** | integer | Number of hours (minus days) difference between latest commit and due date. If project on time, this is the number of hours early, otherwise it's the number of hours late. | 11
+**`mins`** | integer | Number of minutes (minus days and hours) difference between latest commit and due date. If project on time, this is the number of minutes early, otherwise it's the number of minutes late. | 22
 **`source_builds`** | boolean | True if project source code built successfully | FALSE
 **`student_tests_build`** | boolean | True if all student's tests built successfully | TRUE
 **`student_tests_ratio`** | float | Ratio of tests-passed/tests-executed | 0.89
 **`instructor_tests_ratio`** | float | Ratio of instructor's tests-passed/tests-executed | 1.0
 **`grade`** | string | Currently left blank. Instructor to manually fill or load in Excel and write formula to grade. | TBD
-**`notes`** | string | Used by Proctor to add errors or issues encountered during grading
+**`notes`** | string | Used by Proctor to add errors or issues encountered during grading | Proctor run notes
 
 The grade book includes one row per student. So, if there are 25 students in your class and 
 you are grading _TheProject_, you will have 25 rows in _TheProject_'s grade book. This assumes,
 of course, that
 you've included all 25 emails in the file that you used to execute the grading run.
 
-### Managing Groups
-GitLab groups allow you to group projects into directories and give users access to several projects at once.
-You may find it convenient to do for your various classes adn sections. 
-
-Because adding groups and people to groups using the native GitLab Web interface is a little slow 
-and cumbersome, Proctor offers a few convenience commands, `group create` and `group append`. You
-can find the details and switches in the _Commands & Parameters_ section.
-
-## Configuring Proctor
-Proctor uses <b>a single configuration file</b> to enable it do it's job. Both the GitLab repo
-and the Docker image ship with a basic configuration file that you'll need to edit. 
-This section describes the configuration file in detail.
-
-### Name 
-* Name the configuration file `.proctor.cfg`
-* Put `.proctor.cfg` in your home directory, e.g., `~` on Linux and MacOS 
-
-If Proctor does not find the configuration file in your home directory, it will attempt to use
-the current working directory.
-
-### Format
-The configuration file uses a simple INI format, consisting of one or more sections, each
-containing zero or more name-value pairs. For example:
-
-> [GitLabServer] <br/>
-> url = https://eagle.cs.wit.edu/
-
-Here we have a section called _GitLabServer_ that contains a single name-value pair.
-
-### Configuration File Details
-The configuration file is critical. It contains all of the information Proctor needs
-to function properly. The following table explains the valid sections, keys and their uses.
-
-Section | Key Name | Value Description
-------- | ----- | ------
-**`[Proctor]`** | | **Application-level configuration**
-| | `working_dir` | Name of Proctor's working directory, to which it clones git repos and writes log files.
-| | `console_log_level` | Log level threshold. Messages at this level or greater appear in the console output. Uses the [Python logging levels](https://docs.python.org/3/library/logging.html). Set this value to `DEBUG` to see all log messages, `INFO` see to general messages and hide low-level details (recommended), and higher values to see only warnings, errors, and critical errors.  
-| | `logfile_name` | Name of file that captures all logging output, created in Proctor's `working_dir`. Captures all logging information. To suppress file logging, remove the key or provide no value.
-**`[GitLabServer]`** | | **GitLab Server endpoint and login information** 
-| | `url` | URL to the GitLab server that houses projects. You must have a valid account on this server, of course.
-| | `group_path_prefix` | Every group on the GitLab server is associated with a directory structure. The prefix is a unique moniker under which group elements are created, preventing conflicts (much like we use com.xyz to name Java packages). Suggest using your WIT username.
-**`[GitLabUser]`** | | **User login information**
-| | `private_token` | Private token associated with your GitLab user account. Replaces user ID and password. To find your private token, log into GitLab and look under [Profile Settings](https://eagle.cs.wit.edu/profile/account).
-**`[Projects]`** | | **Information about default paths to source code, package names, and test suites.**
-| | `default_src_dir` | Name of the subdirectory that contains the source code for students' projects. Most projects use `src` and store all source code, including unit tests, under this directory. 
-| | `default_src_package` | Name of the package used by projects, e.g., `edu.wit.cs.comp1050`, relative to the `default_src_dir`. 
-| | `default_student_test_suite` | Fully qualified name of the Java test suite class, relative to the `default_src_dir`.
-| | `default_instructor_test_suite_dir` | Path to the directory where instructor's unit tests are stored.
-| | `default_instuctor_test_suite` | Fully qualified name of the instructor's Java test suite class, relative to `default_instructor_test_suite_dir`.
-| | `java_classpath` | Java classpath value to use when building and running Java programs. If absent, Proctor determines the correct value from the `CLASSPATH` environment variable, if set,  or from various working directories if not.
-| | `junit_classpath` | Path including the 2 JAR files required to run JUnit 4.x tests. 
-**`[SMTP]`** | | **SMTP login and port information**
-| | `smtp_host` | URL or IP address to the SMTP server used to send emails
-| | `smtp_port` | Port to use to communicate with the SMTP server
-| | `smtp_user` | Your WIT email address
-| | `smtp_password` | Your WIT email password 
-**`<[project-name]>`** | | **One section per project, e.g., `[pa1-review-student-master]`.**
-| | `due_dt` | Project's due datetime (date and time) in UTC format. Proctor compares this value to the project's last commit date on the server to determine if the project is on-time or late.
-| | `src_dir`, `student_test_suite`, etc. | Project-specific overrides of the `default_` keys from the `[Projects]` section. In other words, if you want `[project-name]` to use a specific source package that overrides the default, you'd add a `src_package` key under `[project-name]`. Note the absence of the `default_` in the key name.
-
-#### Example
-The following is an example of a configured `.proctor.cfg` file:
-
-```
-[Proctor]
-working_dir = /Users/johnpuopolo/Adventure/proctor_wd
-console_log_level = INFO
-logfile_name = proctor-YYYYMMDD.log
-
-[GitLabServer]
-url = https://eagle.cs.wit.edu/
-group_path_prefix = puopoloj1
-
-[GitLabUser]
-private_token = ***
-
-[Projects]
-default_src_dir = src
-default_src_package = edu.wit.cs.comp1050
-default_student_test_suite = edu.wit.cs.comp1050.tests.TestSuite
-default_instructor_test_suite_dir = {Proctor.working_dir}/grading
-default_instructor_test_suite = edu.wit.cs.comp1050.grading.GradingSuite
-
-java_classpath = ''
-junit_path = {Proctor.working_dir}/JUnitRunner/lib/junit-4.12.jar:{Proctor.working_dir}/JUnitRunner/lib/hamcrest-core-1.3.jar
-
-[SMTP]
-smtp_host = smtp.office365.com
-smtp_port = 587
-smtp_user = puopoloj1@wit.edu
-smtp_pwd = ***
-
-[pa1-review-student-master]
-due_dt = 2019-03-05T16:00:00-0500
-
-[pa3-oopcli-student-master]
-due_dt = 2018-03-24T00:00:00-0500
-```
-
-Note that the configuration file supports intelligent replacement values. In the sample
-configuration file above, we see that the `junit_path` contains `{Proctor.working_dir}`.
-This tells the configuration manager to replace `{Proctor.working_dir}` with the value of
-the `working_dir` key found in the `Proctor` section. 
-
-###Project Overrides
-The configuration file contains one section per project. In the example above, we see `[pa1-review-student-master]` 
-and `[pa3-oopcli-student-master]`. In addition to the `due_dt` key, these project
-sections can contain project-specific keys that override the associated `[Projects]` defaults.
-
-Here's how it works. When Proctor needs to determine a value for a given project, e.g., 
-the source package (`src_package`), it checks the project's section, e.g., `[pa1-review-student-master]`
-for the key. In this example, it would check `[pa1-review-student-master]` for the 
-`src_package` key. If it finds it, it uses it. If not, Proctor will prepend the key name with `default_` and
-check to see if that key (`default_src_package`) appears in the `[Projects]` section. 
-
-So, Proctor always checks the individual project section first. If it can't find the key there, it 
-will add `default_` to the key name and check the `[Projects]` section. In this way, individual
-projects can override the general defaults on a per-key basis. You many never need to override the defaults, 
-but hey, never say never.
-  
-## Running Proctor
-Now that you have Proctor configured, it's time to run this bad boy.
-
 ### Commands & Parameters
 This sections describes each command, its parameters, and what happens when you execute it. Note that many
 of the command use information from the configuration file. 
 
-Command | Parameter | Required? | Description
+Command  | Parameter | Required? | Description
 --- | --- | --- | ---
-**`config`** | | | **Displays basic configuration information**
-| | --verbose | No | Displays basic configuration information and the contents of the configuration file.
-**`glping`** | | | **Verifies communication with and access to the GitLab server**
-**`projects`** | | | **Lists projects**
-| | --email | Yes| User/owner email for which to find projects, e.g., email=puopoloj1@wit.edu
-**`clone`** | | | **Clones a given project for one or more students**
-| | --project | Yes | Name of the assignment, lab or project to clone, e.g., `pa1-review-student-master`
-| | --emails | Yes | Name of a file containing student/project owner emails. Proctor clones the given project for each email listed in the file. The format is expected to be one email per line.
-| | --force | No | If present, forces overwrite of existing target directories on the local machine. If target directories exist, cloning will fail unless specified.
-**`grade`** | | | **Grades a given project for one or more students**
-| | --project | Yes | Name of the assignment, lab or project to grade, e.g., `pa1-review-student-master`
-| | --emails | Yes | Name of a file containing student/project owner emails. Proctor grades the given project for each email listed in the file. The format is expected to be one email per line.
-| | --chide | No | If present, sends reminder emails to students whose project was not found for grading.
-**`group create`** | | | **Creates GitLab groups**
-| | --groupname | Yes | Name of the group to create
-**`group append`** | | | **Adds users/emails to a GitLab group**
-| | --groupname | Yes | Name of the group to which to add users
-| | --emails | Yes | Name of a file containing users/emails. The users in the file are added to the specified group.
+**`config`** | --verbose | No | Displays basic configuration information and the contents of the configuration file.
+**`glping`** | _none_ | No | Verifies access to the GitLab server.
+**`projects`** | --email | Yes| User email for which to find projects.
+**`clone`** | --project | Yes | Name of the assignment, lab or project to clone.
+&nbsp; | --emails | Yes | Name of a file containing student (project owner) emails. Proctor clones the given project for each email listed in the file. The format is expected to be one email per line.
+&nbsp; | --force | No | If present, forces overwrite of existing target directories on the local machine. If target directories exist, cloning will fail unless specified.
+**`grade`** | --project | Yes | Name of the assignment, lab or project to grade.
+&nbsp; | --emails | Yes | Name of a file containing student/project owner emails. Proctor grades the given project for each email listed in the file. The format is expected to be one email per line.
+&nbsp; | --chide | No | If present, sends reminder emails to students whose project was not found for grading.
+**`group create`** | --groupname | Yes | Name of the group to create.
+**`group append`** | --groupname | Yes | Name of the group to which to add users.
+&nbsp; | --emails | Yes | Name of a file containing users/emails. The users in the file are added to the specified group.
 
 #### Command Examples
 The following examples demonstrate all of Proctor's valid commands and their associated parameters.
@@ -536,7 +543,7 @@ Some ideas for enhancements include:
 * Enhancing the group management functionality to remove people from groups, grant certain levels
 of access to groups, etc.
 * Replacing the simple CSV-style grade book with an Excel spreadsheet and adding grading formulas automatically
-* Adding an upload feature to Blackboard and LConnect
+* Adding an upload feature to Blackboard and LConnect or, better yet, API-based integration
 * Create a Windows-compatible Docker image and share it on Docker Hub
 
 ## Wrap Up
