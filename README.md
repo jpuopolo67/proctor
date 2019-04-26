@@ -193,10 +193,12 @@ a starter `.proctor.cfg` file, and the following directories:
     * `/home/proctor/work`
         * Proctor's default working directory, where cloned projects and log files live.
     * `/data`
-        * Directory used to retain data between container runs, e.g., your edited 
-    `.proctor.cfg` file.<br/>Each time you create a container based on the Proctor image, you will lose the
-    edits to your configuration file, so you'll want a copy of the edited one that you can copy from `/data`
-    back to `/root`.
+        * Container directory that's mapped to a host directory. It's 
+        used to retain data between container runs, e.g., your edited `.proctor.cfg` file. 
+        Each time you run a new container based on the Proctor image, you will lose all edits, including
+        those to your configuration file. So, keep a copy of `.proctor.cfg` in `/data` and copy it to `/root`
+        whenever you start a new container. Note that you can also use 
+        `/data` to copy instructor test files, JUnit suites, etc. from the host machine to the container. 
 
 * Edit the configuration file<br/>
 `vim /root/.proctor.cfg`<br/>
