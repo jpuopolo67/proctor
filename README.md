@@ -404,8 +404,12 @@ and will display project summary information.
 
 ### Listing Projects by Owner Email
 Sometimes it's useful to list all of the projects that a given student has uploaded to the server and made available
-to you. To do this, execute the `projects --email=<owner email>` command. This will list all of the projects
+to you. To do this, execute the `projects --owner=<owner email>` command. This will list all of the projects
 uploaded to the server by the specificed user to which you have access.
+
+This command includes two more swithes:
+* --emails. Name of a file that contains one or more email addresses for which to list projects.
+* --share. If present, will send a copy of the owner's project list to the owner.
 
 ### Cloning
 Cloning is the process of copying a source code repository (repo) from the GitLab server to your local machine.
@@ -505,7 +509,9 @@ Command  | Parameter | Required? | Description
 --- | --- | --- | ---
 **`config`** | --verbose | No | Displays basic configuration information and the contents of the configuration file.
 **`glping`** | _none_ | No | Verifies access to the GitLab server.
-**`projects`** | --email | Yes| User email for which to find projects.
+**`projects`** | --owner | No | User email for which to find projects.
+&nbsp; | --emails | No | Name of a file containing student (project owner) emails. Proctor fetches available project information for each email listed in the file. The format is expected to be one email per line.
+&nbsp; | --share | No | If this flag is present, shares an owner's project list with that owner.
 **`clone`** | --project | Yes | Name of the assignment, lab or project to clone.
 &nbsp; | --emails | Yes | Name of a file containing student (project owner) emails. Proctor clones the given project for each email listed in the file. The format is expected to be one email per line.
 &nbsp; | --force | No | If present, forces overwrite of existing target directories on the local machine. If target directories exist, cloning will fail unless specified.
