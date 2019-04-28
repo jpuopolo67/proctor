@@ -1,27 +1,39 @@
 import smtplib
 from pconfig import ProctorConfig
 
-
 class Postman:
     """Postman enables the application to send emails programmatically."""
     @staticmethod
-    def sendmail(email_list, project_name, logger):
+    def send_email(recipient, subject, body, logger):
+        """Sends an email to the given recipient.
+        :param recipient: Recipient email
+        :param subject: Subject line
+        :param body: Message body
+        :param logger: Logger to which to capture send"""
+        Postman._init_server()
+        logger.debug(f"Sending email '{subject}' to {recipient}")
+        header = f'Subject: {subject}\n'
+        message_body = header + '\n' + body
+        Postman._server.sendmail(Postman._smtp_user, recipient, message_body)
+        Postman._server.quit()
+
+    @staticmethod
+    def send_missing_project_email(email_list, project_name, logger):
         """Sends an email to each person in the given email list.
         :param email_list: List of receipient email addresses
         :param project_name: Name of the project for which email is being sent.
         :param logger: Proctor's logger"""
-
         Postman._init_server()
         subject = "Missing Project: {}".format(project_name.upper())
         header = f'Subject: {subject}\n'
         for recipient in email_list:
             logger.info(f'Chiding {recipient}')
-            message_body = header + '\n' + Postman._generate_message_body(recipient, project_name)
-            Postman._server.sendmail(Postman._smtp_user, recipient,  message_body)
+            message_body = header + '\n' + Postman._generate_missing_project_message_body(recipient, project_name)
+            Postman._server.sendmail(Postman._smtp_user, recipient, message_body)
         Postman._server.quit()
 
     @staticmethod
-    def _generate_message_body(recipient_email, project_name):
+    def _generate_missing_project_message_body(recipient_email, project_name):
         """Generates the body of the email message.
         :param recipient_email: Email address of recipient
         :param project_name: Project for which email is being sent
