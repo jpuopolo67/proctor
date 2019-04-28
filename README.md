@@ -531,7 +531,8 @@ $ python3 proctor.py...
     $ config
     $ config --verbose
     $ glping
-    $ projects --email=studentx@wit.edu
+    $ projects --owner=studentx@wit.edu
+    $ projects --emails=all-students-comp1050.txt --share
     $ clone --project=pa1-review-student-master --emails=proctor_wd/comp1050.txt
     $ clone --project=oop3-cli --emails=mystudents.txt --force
     $ grade --project=pa1-review-student-master --emails=mydir/mystudents.txt 

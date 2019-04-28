@@ -109,7 +109,7 @@ class Proctor:
         elif cmd == 'grade':
             self._grade_project()
         elif cmd == 'projects':
-            self._find_projects_for_owner()
+            self._list_projects()
         elif cmd == 'group':
             self._manage_groups()
         else:
@@ -131,7 +131,7 @@ class Proctor:
         with open(ProctorConfig.config_file) as f:
             print(f.read())
 
-    def _find_projects_for_owner(self):
+    def _list_projects(self):
         """Finds and displays the repo URLs for all projects on the GitLab server owned by the
         a single owner (--owner) or a list of people (--emails)."""
         owner = email_file = None
@@ -140,13 +140,28 @@ class Proctor:
         if 'emails' in self._argsdict:
             email_file = self._argsdict['emails']
         if owner is None and email_file is None:
-            self._logger.warning("Please add the --owner and/or --emails flag")
+            self._logger.warning("Please add the --owner or --emails flag. If both given, --owner wins.")
             return
 
+        the_projects = None
         if owner:
-            self._list_projects_for(owner)
-        if email_file:
-            self._list_projects_for_owners(email_file)
+            the_projects = {owner: self._list_projects_for(owner)}
+        elif email_file:
+            the_projects = self._list_projects_for_owners(email_file)
+
+        share = 'share' in self._argsdict and self._argsdict['share']
+        if share:
+            self._email_owners_project_summary_list(the_projects)
+
+    def _list_projects_for(self, owner):
+        num_projects, projects = self._server.get_projects_for_owner(owner)
+        self._logger.info(f'{owner} has {num_projects} projects')
+
+        count = 1
+        for p in projects:
+            self._logger.info(f'{count:2} {p}')
+            count += 1
+        return projects
 
     def _list_projects_for_owners(self, email_file):
         """Iterates over the emails in the given email file and lists all projects owned by that person.
@@ -169,9 +184,7 @@ class Proctor:
                 self._logger.info(f"Invalid email '{email}' in file. Skipped.")
             count += 1
 
-        share = 'share' in self._argsdict and self._argsdict['share']
-        if share:
-            self._email_owners_project_summary_list(projects)
+        return projects
 
     def _email_owners_project_summary_list(self, projects):
         """Emails each person a summary list of what his or she has uploaded to the server and
@@ -180,8 +193,8 @@ class Proctor:
         num_owners = len(projects)
         self._logger.info(f'Sharing project information with {num_owners} owners')
 
-        msg = []
         for recipient, the_projects in projects.items():
+            msg = []
             now = dt.today().strftime("%Y-%m-%d %H:%M")
             msg.append('This is an automatically generated email.\n')
             msg.append(f'Projects available to your instructor as of {now}:\n')
@@ -190,15 +203,6 @@ class Proctor:
             self._logger.info(f'Emailing project snapshot: {recipient}')
             msg_body = '\n'.join(msg)
             Postman.send_email(recipient, 'Projects Availability Snapshot', msg_body, self._logger)
-
-    def _list_projects_for(self, owner):
-        num_projects, projects = self._server.get_projects_for_owner(owner)
-        self._logger.info(f'{owner} has {num_projects} projects')
-        count = 1
-        for p in projects:
-            self._logger.info(f'{count:2} {p}')
-            count += 1
-        return projects
 
     def _glping(self):
         """Hails the GitLab server and returns information about the logged in user."""
