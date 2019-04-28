@@ -1,7 +1,7 @@
 from datetime import datetime as dt
 from pathmgr import PathManager
 from ploggerfactory import ProctorLoggerFactory
-
+from pconfig import ProctorConfig
 
 class Grader:
     """Runs units tests using JUnit and determines the ratio of passed/total, e.g., 10/15"""
@@ -33,7 +33,7 @@ class Grader:
                       'is_ontime': is_ontime, 'days': days, 'hours': hours, 'mins': mins}
 
         # Running list of notes
-        notes = ""
+        notes = ''
 
         # Build source
         self._logger.debug(f'Building source: {dir_to_grade}')
@@ -45,6 +45,8 @@ class Grader:
             self._logger.debug(f'Building student unit tests: {dir_to_grade}')
             build_tests_errors = self._builder.build_tests(email, project_name, dir_to_grade)
             grade_info.update({'student_tests_build': build_tests_errors == 0})
+        else:
+            grade_info.update({'student_tests_build': 'NA'})
 
         # Run project unit tests and calculate internal test ratio = passed tests / total tests
         if build_source_errors == 0 and build_tests_errors == 0:
