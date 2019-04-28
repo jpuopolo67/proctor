@@ -61,7 +61,7 @@ class GitLabServer:
         project_count = 0
 
         username = email.replace('@wit.edu', '')
-        all_projects = self._server.projects.list(all=True)
+        all_projects = self._server.projects.list(search=username, all=True)
 
         for p in all_projects:
             if p.owner.username == username:
