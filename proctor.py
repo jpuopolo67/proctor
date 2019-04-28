@@ -3,8 +3,8 @@
 import argparse
 import sys
 import os
-import re
 import termcolor
+from datetime import datetime as dt
 from pathlib import Path
 from pconfig import ProctorConfig
 from gitlabserver import GitLabServer
@@ -70,7 +70,9 @@ class Proctor:
 
         # project
         parser_project = subparsers.add_parser('projects', help='list projects for a given owner/email')
-        parser_project.add_argument("--email", help="person for which to find the projects", required=True)
+        parser_project.add_argument("--owner", help="person for which to find the projects")
+        parser_project.add_argument("--emails", help="path to text file containing students emails")
+        parser_project.add_argument("--share", help="shares each student's list with the student", action="store_true")
 
         # group command
         parser_group = subparsers.add_parser('group', help='command used to manage groups on server')
@@ -131,10 +133,67 @@ class Proctor:
 
     def _find_projects_for_owner(self):
         """Finds and displays the repo URLs for all projects on the GitLab server owned by the
-         email passed in on the command line as part of the --email flag."""
-        owner_email = self._argsdict['email']
-        num_projects, projects = self._server.get_projects_for_owner(owner_email)
-        self._logger.info(f'{owner_email} has {num_projects} projects')
+        a single owner (--owner) or a list of people (--emails)."""
+        owner = email_file = None
+        if 'owner' in self._argsdict:
+            owner = self._argsdict['owner']
+        if 'emails' in self._argsdict:
+            email_file = self._argsdict['emails']
+        if owner is None and email_file is None:
+            self._logger.warning("Please add the --owner and/or --emails flag")
+            return
+
+        if owner:
+            self._list_projects_for(owner)
+        if email_file:
+            self._list_projects_for_owners(email_file)
+
+    def _list_projects_for_owners(self, email_file):
+        """Iterates over the emails in the given email file and lists all projects owned by that person.
+        If --share has been specified on the command line, email each person his or her project list.
+        :arg email_file: Full path to the file that contains the list of project owner emails to process. """
+        owner_emails = self._get_emails_from_file(email_file)
+        num_emails = len(owner_emails)
+
+        self._logger.info(f'Fetching projects for {num_emails} people')
+        projects = dict()
+        count = 1
+
+        for email in owner_emails:
+            self._logger.info('---')
+            self._logger.info(f'Owner: {email} ({count} of {num_emails})')
+            email = email.strip()
+            if email:
+                projects[email] = self._list_projects_for(email)
+            else:
+                self._logger.info(f"Invalid email '{email}' in file. Skipped.")
+            count += 1
+
+        share = 'share' in self._argsdict and self._argsdict['share']
+        if share:
+            self._email_owners_project_summary_list(projects)
+
+    def _email_owners_project_summary_list(self, projects):
+        """Emails each person a summary list of what his or she has uploaded to the server and
+        available to the instructor.
+        :arg projects: A dictionary that maps email->list of projects"""
+        num_owners = len(projects)
+        self._logger.info(f'Sharing project information with {num_owners} owners')
+
+        msg = []
+        for recipient, the_projects in projects.items():
+            now = dt.today().strftime("%Y-%m-%d %H:%M")
+            msg.append('This is an automatically generated email.\n')
+            msg.append(f'Projects available to your instructor as of {now}:\n')
+            msg.append('\n'.join(the_projects))
+            msg.append('\nIf you think this list is inaccurate, please contact your instructor.\n---\n')
+            self._logger.info(f'Emailing project snapshot: {recipient}')
+            msg_body = '\n'.join(msg)
+            Postman.send_email(recipient, 'Projects Availability Snapshot', msg_body, self._logger)
+
+    def _list_projects_for(self, owner):
+        num_projects, projects = self._server.get_projects_for_owner(owner)
+        self._logger.info(f'{owner} has {num_projects} projects')
         count = 1
         for p in projects:
             self._logger.info(f'{count:2} {p}')
@@ -206,12 +265,17 @@ class Proctor:
         users_missing_project = []
 
         self._logger.info(f'Grading {project_name}')
+
+        num_to_grade = len(owner_emails)
+        current = 0
+
         for email in owner_emails:
 
             email = email.strip(' ')
+            current += 1
 
             self._logger.info('---')
-            self._logger.info(f'Owner {email}')
+            self._logger.info(f'Owner {email} ({current} of {num_to_grade})')
 
             if len(email) == 0:
                 self._logger.info(f"Invalid owner email '{email}'. Check email file for blank lines.")
@@ -246,7 +310,7 @@ class Proctor:
             if 'chide' in self._argsdict:
                 if self._argsdict['chide']:
                     self._logger.info("Chiding people with missing projects...")
-                    Postman.sendmail(users_missing_project, project_name, self._logger)
+                    Postman.send_missing_project_email(users_missing_project, project_name, self._logger)
 
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file.
