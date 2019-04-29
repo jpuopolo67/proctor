@@ -164,12 +164,12 @@ the following:
 * Starter configuration file
 * VIM editor
 
-This Docker image was created for Linux-based systems and is not compatiable with Windows.
+This Docker image was created for Linux-based systems and is not compatible with Windows.
 To use this image:
 
 * Make sure you have [Docker](https://www.docker.com/) installed and running on your local machine
 * Download the image from the Docker Hub registry:<br/>
-`docker pull jpuopolo/proctor`
+`docker pull jpuopolo/proctor:latest`
 
 Before running a container based on this image, select a _local directory on your host_ where you can 
 keep data that will persist between container runs. After editing the starter `.proctor.cfg` file, you 
