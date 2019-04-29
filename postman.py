@@ -23,14 +23,11 @@ class Postman:
         :param email_list: List of receipient email addresses
         :param project_name: Name of the project for which email is being sent.
         :param logger: Proctor's logger"""
-        Postman._init_server()
         subject = "Missing Project: {}".format(project_name.upper())
-        header = f'Subject: {subject}\n'
         for recipient in email_list:
             logger.info(f'Chiding {recipient}')
-            message_body = header + '\n' + Postman._generate_missing_project_message_body(recipient, project_name)
-            Postman._server.sendmail(Postman._smtp_user, recipient, message_body)
-        Postman._server.quit()
+            message_body = Postman._generate_missing_project_message_body(recipient, project_name)
+            Postman.send_email(recipient, subject, message_body, logger)
 
     @staticmethod
     def _generate_missing_project_message_body(recipient_email, project_name):
