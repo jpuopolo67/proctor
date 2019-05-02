@@ -1,7 +1,10 @@
 # Proctor!
 
+## TODO
+* Add refresh --email=xxx command
+
 ## User Guide
-_Last update: 2019-Apr-23_
+_Last update: 2019-Apr-30_
 
 ## Welcome
 _Proctor_ is a Python 3.6 command-line application that enables you to grade Java-based projects. 
