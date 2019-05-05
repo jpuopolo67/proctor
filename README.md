@@ -4,7 +4,7 @@
 * Add refresh --email=xxx command
 
 ## User Guide
-_Last update: 2019-Apr-30_
+_Last update: 2019-May-05_
 
 ## Welcome
 _Proctor_ is a Python 3.6 command-line application that enables you to grade Java-based projects. 
@@ -215,7 +215,7 @@ and what they do in the section [_Configuration File Details_](#configuration-fi
     * `smtp_pwd`
 
 * You can optionally fill in or change the values for the `default_` keys in
-the `[Projects]` section of the configuration file.
+the `[Defaults]` section of the configuration file.
 
 * Add `[<assignment section>]` for each assignment you want to grade
     * You can (and probably should) treat the configuration file as a living document. You can 

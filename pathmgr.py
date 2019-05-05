@@ -112,7 +112,7 @@ class PathManager:
 
         # First, attempt to read java_classpath from the configuration file. If it's
         # not found or is empty, attempt to read the environment CLASSPATH variable.
-        java_classpath = ProctorConfig.get_config_value('Projects', 'java_classpath')
+        java_classpath = ProctorConfig.get_config_value('Defaults', 'java_classpath')
         if java_classpath is None or len(java_classpath) == 0:
             try:
                 java_classpath = os.environ['CLASSPATH']
@@ -124,7 +124,7 @@ class PathManager:
     def get_junit_classpath():
         """Determines the Java classpath use use for JUnit.
         :returns Java classpath to use to run JUnit or None if it cannot be determined."""
-        return ProctorConfig.get_config_value('Projects', 'junit_path')
+        return ProctorConfig.get_config_value('Defaults', 'junit_path')
 
     @staticmethod
     def get_full_classpath(java_cp, junit_cp):
@@ -147,7 +147,7 @@ class PathManager:
         cfg_value = ProctorConfig.get_config_value(project_name, cfg_key)
         if cfg_value is None:
             new_key = f'default_{cfg_key}'
-            cfg_value = ProctorConfig.get_config_value('Projects', new_key)
+            cfg_value = ProctorConfig.get_config_value('Defaults', new_key)
 
         if not cfg_value is None:
             cfg_value = cfg_value.strip()
