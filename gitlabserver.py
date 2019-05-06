@@ -123,7 +123,6 @@ class GitLabServer:
             PathManager.init_dest_path(dest_path_name, force)
             http_url = gitlab_project.http_url_to_repo
             self._logger.info('Cloning repo: {}...{}'.format(http_url, "(FORCED)" if force else ''))
-            #shell_cmd = 'git clone {repo} {dest_dir}'.format(repo=http_url, dest_dir=dest_path_name)
             result = subprocess.run(['git', 'clone', http_url, dest_path_name],
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if result.returncode == 0:

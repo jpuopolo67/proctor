@@ -76,3 +76,7 @@ class ProctorConfig:
         except:
             value = None
         return value
+
+    @staticmethod
+    def get_section_items(section):
+        return dict(ProctorConfig.CONFIG.items(section))

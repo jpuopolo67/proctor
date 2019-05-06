@@ -49,6 +49,12 @@ class Proctor:
         # organize the hierarchy of command parsers
         subparsers = self._argparser.add_subparsers()
 
+        # srefresh
+        parser_srefresh = subparsers.add_parser('srefresh', help='re-clone and optionally regrade all student projects')
+        parser_srefresh.add_argument('--owner', help='email of the person to refresh')
+        parser_srefresh.add_argument('--emails', help='path to text file containing all people to refresh')
+        parser_srefresh.add_argument('--grade', help='if present, re-grades projects after cloning', action='store_true')
+
         # config
         parser_config = subparsers.add_parser('config', help='display basic configuration information')
         parser_config.add_argument("--verbose", help="display entire configruation file", action="store_true")
@@ -105,16 +111,72 @@ class Proctor:
         elif cmd == 'glping':
             self._glping()
         elif cmd == 'clone':
-            self._clone_project()
+            project_name = self._argsdict['project']
+            self._clone_project_cmd(project_name)
         elif cmd == 'grade':
             self._grade_project()
         elif cmd == 'projects':
             self._list_projects()
         elif cmd == 'group':
             self._manage_groups()
+        elif cmd == 'srefresh':
+            self._refresh_student_projects()
         else:
-            self._logger.error(f"Unknown command '{cmd}'. Valid commands are: clone, grade")
+            self._logger.error(f"Unknown command '{cmd}'. Try -h for help.")
             sys.exit(0)
+
+    def _clone_project_cmd(self, project_name):
+        """Called when clone called from the command line. Prepares arguments and then
+        delegates actual clone operation to common cloning function.
+        :arg project_name: Name of project to clone, e.g., pa1-review-student-master"""
+        email_file = self._argsdict['emails']
+        emails = self._get_emails_from_file(email_file)
+        force = self._argsdict['force']
+        self._clone_project(project_name, emails, force)
+
+    def _refresh_student_projects(self):
+
+        parameters = self._parse_parameters_from_argv('owner', 'emails', 'grade')
+        owner = parameters['owner']
+        email_file = parameters['emails']
+        grade = parameters['grade']
+
+        if owner is None and email_file is None:
+            self._logger.warning("Please add the --owner or --emails parameter. If both given, --owner wins.")
+            return
+
+        projects = ProctorConfig.get_section_items('Projects').keys()
+        emails = list()
+        if owner:
+            emails.append(owner)
+        else:
+            emails.append(self._get_emails_from_file(email_file))
+
+        for owner in emails:
+            for p in projects:
+                self._clone_project(p, emails, force=True)
+
+    def _clone_project(self, project_name, emails, force):
+        """Clones the given project for each email in the specified email file.
+        :arg project_name: Name of the project to clone, e.g., pa1-review-student-master
+        :arg emails: List of emails for which to clone projects
+        :arg force: If true, causes clone to overwrite existing target directories"""
+        if emails is None:
+            self._logger.error("Cannot clone projects without valid emails. Exiting.")
+            sys.exit(-1)
+
+        # Make sure emails that come from file are not blank
+        owner_emails = [email for email in emails if len(email.strip(' ')) > 0]
+
+        # Clone 'em
+        self._logger.info('Cloning project: {}'.format(project_name))
+        for email in owner_emails:
+            gitlab_project = self._server.get_user_project(email, project_name)
+            if gitlab_project:
+                dest_path_name = PathManager.build_dest_path_name(self._working_dir_name, email, project_name)
+                self._server.clone_project(gitlab_project, dest_path_name, force)
+            else:
+                self._logger.warning(f"Project not found. Check project name '{project_name}' and email '{email}'.")
 
     def _display_config_info(self):
         """Displays basic logging information."""
@@ -134,13 +196,14 @@ class Proctor:
     def _list_projects(self):
         """Finds and displays the repo URLs for all projects on the GitLab server owned by the
         a single owner (--owner) or a list of people (--emails)."""
-        owner = email_file = None
-        if 'owner' in self._argsdict:
-            owner = self._argsdict['owner']
-        if 'emails' in self._argsdict:
-            email_file = self._argsdict['emails']
+
+        parameters = self._parse_parameters_from_argv('owner', 'emails', 'share')
+        owner = parameters['owner']
+        email_file = parameters['emails']
+        share = parameters['share']
+
         if owner is None and email_file is None:
-            self._logger.warning("Please add the --owner or --emails flag. If both given, --owner wins.")
+            self._logger.warning("Please add the --owner or --emails parameter. If both given, --owner wins.")
             return
 
         the_projects = None
@@ -148,10 +211,14 @@ class Proctor:
             the_projects = {owner: self._list_projects_for(owner)}
         elif email_file:
             the_projects = self._list_projects_for_owners(email_file)
-
-        share = 'share' in self._argsdict and self._argsdict['share']
         if share:
             self._email_owners_project_summary_list(the_projects)
+
+    def _parse_parameters_from_argv(self, *args):
+        parameters = dict()
+        for arg in args:
+            parameters[arg] = self._argsdict[arg] if arg in self._argsdict else None
+        return parameters
 
     def _list_projects_for(self, owner):
         num_projects, projects = self._server.get_projects_for_owner(owner)
@@ -325,28 +392,6 @@ class Proctor:
             self._logger.error(f'EMAIL FILE {email_file} NOT FOUND. Check the path.')
         return owner_emails
 
-    def _clone_project(self):
-        """Clones the given project for each email in the specified email file."""
-        owner_emails = self._get_emails_from_file(self._argsdict['emails'])
-        if owner_emails is None:
-            self._logger.error("Cannot clone projects without valid emails. Exiting.")
-            sys.exit(-1)
-
-        # Clone 'em
-        project_name = self._argsdict['project']
-        self._logger.info('Cloning project: {}'.format(project_name))
-        force = self._args.force
-        for email in owner_emails:
-            email = email.strip(' ')
-            if len(email) == 0:
-                continue
-            gitlab_project = self._server.get_user_project(email, project_name)
-            if gitlab_project:
-                dest_path_name = PathManager.build_dest_path_name(self._working_dir_name, email, project_name)
-                self._server.clone_project(gitlab_project, dest_path_name, force)
-            else:
-                self._logger.warning(f"Project not found. Check project name '{project_name}' and email '{email}'.")
-
     def done(self):
         # Possibly print something here
         pass
@@ -354,7 +399,7 @@ class Proctor:
 if __name__ == "__main__":
 
     if len(sys.argv) <= 1:
-        termcolor.cprint("usage: proctor.py [-h] {config, glping, clone, grade, group}", color='red')
+        termcolor.cprint("usage: proctor.py [-h] {config, glping, clone, grade, group, srefresh}", color='red')
         sys.exit(-1)
 
     ProctorConfig.init(None)
