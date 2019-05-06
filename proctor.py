@@ -150,11 +150,10 @@ class Proctor:
         if owner:
             emails.append(owner)
         else:
-            emails.append(self._get_emails_from_file(email_file))
+            emails = (self._get_emails_from_file(email_file))
 
-        for owner in emails:
-            for p in projects:
-                self._clone_project(p, emails, force=True)
+        for p in projects:
+            self._clone_project(p, emails, force=True)
 
     def _clone_project(self, project_name, emails, force):
         """Clones the given project for each email in the specified email file.
