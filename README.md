@@ -404,7 +404,7 @@ Level | When It's Used
 --- | ---
 `DEBUG` | Detailed information, typically of interest only when diagnosing problems.
 `INFO` | Confirmation that things are working as expected.
-`WARNING` | An indication that something unexpected happened, or indicative of some problem in the near future e.g. ‘disk space low’). The software is still working as expected.
+`WARNING` | An indication that something unexpected happened, or indicative of some problem in the near future e.g. ‘disk space low’. The software is still working as expected.
 `ERROR` | Due to a more serious problem, the software has not been able to perform some function.
 `CRITICAL` | A serious error, indicating that the program itself may be unable to continue running.
 
@@ -416,7 +416,7 @@ exist, it will be opened in append mode. The log file captures _all_ logging out
 
 Note that the log file processor recognizes one special pattern: _YYYYMMDD_. If you include this string
 anywhere in the `logfile_name` value, Proctor will replace it with the actual date. This enables you to
-create log files per diem.
+create log files per day.
 
 ### Displaying Configuration Information
 To see basic configuration information, execute the `config` command. To display basic information
@@ -432,9 +432,9 @@ Sometimes it's useful to list all of the projects that a given student has uploa
 to you. To do this, execute the `projects --owner=<owner email>` command. This will list all of the projects
 uploaded to the server by the specificed user to which you have access.
 
-This command includes two more swithes:
-* --emails. Name of a file that contains one or more email addresses for which to list projects.
-* --share. If present, will send a copy of the owner's project list to the owner.
+This command includes two more options:
+* `--emails`. Name of a file that contains one or more email addresses for which to list projects.
+* `--share`. If present, will send a copy of the owner's project list to the owner.
 
 ### Cloning
 Cloning is the process of copying a source code repository (repo) from the GitLab server to your local machine.
@@ -526,6 +526,12 @@ you are grading _TheProject_, you will have 25 rows in _TheProject_'s grade book
 of course, that
 you've included all 25 emails in the file that you used to execute the grading run.
 
+### Refreshing
+Sometimes it's useful to "refresh" projects. This means re-cloning and optionally re-grading one or 
+more projects for one or more students. The command to do this in Proctor is `srefresh` (student refresh). 
+The projects to refresh are listed in the `[Projects]` section of the configuration file. See the table
+below in _Commands & Parameters_ for the options.
+ 
 ### Commands & Parameters
 This sections describes each command, its parameters, and what happens when you execute it. Note that many
 of the command use information from the configuration file. 
@@ -548,6 +554,7 @@ Command  | Parameter | Required? | Description
 &nbsp; | --emails | Yes | Name of a file containing users/emails. The users in the file are added to the specified group.
 **`srefresh`** | --owner | No | User email for which to refresh projects. The projects refreshed are those found in the `[Projects]` section of the configuration file.
 &nbsp; | --emails | No | Name of a file containing student (project owner) emails. Proctor refreshes available projects for each email listed in the file. The format is expected to be one email per line.
+&nbsp; | --grade | No | If present, instructs Proctor to re-grade the assigrments for the given student(s) after re-cloning completes.
 
 #### Command Examples
 The following examples demonstrate all of Proctor's valid commands and their associated parameters.
@@ -568,6 +575,7 @@ $ python3 proctor.py...
     $ group append --groupname=extracredit --emails=students.txt
     $ srefresh --owner=puopoloj1@wit.edu
     $ srefresh --emails=allstudents.txt
+    $ srefresh --emails=allstudents.txt --grade  
  ```
  
 ## Future Enhancements
