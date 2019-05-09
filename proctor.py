@@ -155,6 +155,78 @@ class Proctor:
         for p in projects:
             self._clone_project(p, emails, force=True)
 
+        if grade:
+            for p in projects:
+                self._grade_project(p, emails)
+
+    def _grade_project(self, project_name=None, emails=None):
+        """Grades the given project for each email in the specified email file, pulled from program args.
+        Projects are expected to have been cloned to a local directory previously.
+        Results in the gradebook file saved to the project's working directory."""
+
+        if project_name is None:
+            project_name = self._argsdict['project']
+        project_dir = os.sep.join([self._working_dir_name, project_name])
+        project_due_dt = ProctorConfig.get_config_value(project_name, 'due_dt')
+
+        gradebook = GradeBook(self._working_dir_name, project_name, project_due_dt)
+        builder = Builder()
+        testrunner = UnitTestRunner()
+        grader = Grader(builder, testrunner, gradebook)
+
+
+        owner_emails = emails if not emails is None else \
+            self._get_emails_from_file(self._argsdict['emails'])
+        users_missing_project = []
+
+        self._logger.info(f'Grading {project_name}')
+
+        num_to_grade = len(owner_emails)
+        current = 0
+
+        for email in owner_emails:
+
+            email = email.strip(' ')
+            current += 1
+
+            self._logger.info('---')
+            self._logger.info(f'Owner {email} ({current} of {num_to_grade})')
+
+            if len(email) == 0:
+                self._logger.info(f"Invalid owner email '{email}'. Check email file for blank lines.")
+                continue
+
+            dir_to_grade = Path(project_dir) / email
+            if not dir_to_grade.exists():
+                users_missing_project.append(email)
+                self._logger.warning('Local project not found: {}. Try clone.'.format(str(dir_to_grade)))
+                gradebook.local_project_not_found(email)
+                continue
+
+            project = self._server.get_user_project(email, project_name)
+            if project:
+                commits = project.commits.list()
+                if commits:
+                    latest_commit_date = commits[0].created_at  # GitLab returns most recent first (index 0)
+                    grader.grade(email, project_name, dir_to_grade, project_due_dt, latest_commit_date)
+                else:
+                    gradebook.commit_not_found(email)
+                    self._logger.warning('No commit. Server project found, no commit.')
+            else:
+                gradebook.server_project_not_found(email)
+                self._logger.warning('Not found. Project not found on server. Check email address.')
+
+        self._logger.info('---')
+        self._logger.info(f'Saving grades to: {gradebook.get_file_name()}')
+        gradebook.save()
+
+        if users_missing_project:
+            self._logger.info("Local project missing for: {}".format(users_missing_project))
+            if 'chide' in self._argsdict:
+                if self._argsdict['chide']:
+                    self._logger.info("Chiding people with missing projects...")
+                    Postman.send_missing_project_email(users_missing_project, project_name, self._logger)
+
     def _clone_project(self, project_name, emails, force):
         """Clones the given project for each email in the specified email file.
         :arg project_name: Name of the project to clone, e.g., pa1-review-student-master
@@ -316,71 +388,6 @@ class Proctor:
         :param emails_file_name: Name of file that contains the list of emails to add to the group"""
         email_list = self._get_emails_from_file(emails_file_name)
         self._server.add_users_to_group(group_name, email_list)
-
-    def _grade_project(self):
-        """Grades the given project for each email in the specified email file, pulled from program args.
-        Projects are expected to have been cloned to a local directory previously.
-        Results in the gradebook file saved to the project's working directory."""
-
-        project_name = self._argsdict['project']
-        project_dir = os.sep.join([self._working_dir_name, project_name])
-        project_due_dt = ProctorConfig.get_config_value(project_name, 'due_dt')
-
-        gradebook = GradeBook(self._working_dir_name, project_name, project_due_dt)
-        builder = Builder()
-        testrunner = UnitTestRunner()
-        grader = Grader(builder, testrunner, gradebook)
-
-        owner_emails = self._get_emails_from_file(self._argsdict['emails'])
-        users_missing_project = []
-
-        self._logger.info(f'Grading {project_name}')
-
-        num_to_grade = len(owner_emails)
-        current = 0
-
-        for email in owner_emails:
-
-            email = email.strip(' ')
-            current += 1
-
-            self._logger.info('---')
-            self._logger.info(f'Owner {email} ({current} of {num_to_grade})')
-
-            if len(email) == 0:
-                self._logger.info(f"Invalid owner email '{email}'. Check email file for blank lines.")
-                continue
-
-            dir_to_grade = Path(project_dir) / email
-            if not dir_to_grade.exists():
-                users_missing_project.append(email)
-                self._logger.warning('Local project not found: {}. Try clone.'.format(str(dir_to_grade)))
-                gradebook.local_project_not_found(email)
-                continue
-
-            project = self._server.get_user_project(email, project_name)
-            if project:
-                commits = project.commits.list()
-                if commits:
-                    latest_commit_date = commits[0].created_at  # GitLab returns most recent first (index 0)
-                    grader.grade(email, project_name, dir_to_grade, project_due_dt, latest_commit_date)
-                else:
-                    gradebook.commit_not_found(email)
-                    self._logger.warning('No commit. Server project found, no commit.')
-            else:
-                gradebook.server_project_not_found(email)
-                self._logger.warning('Not found. Project not found on server. Check email address.')
-
-        self._logger.info('---')
-        self._logger.info(f'Saving grades to: {gradebook.get_file_name()}')
-        gradebook.save()
-
-        if users_missing_project:
-            self._logger.info("Local project missing for: {}".format(users_missing_project))
-            if 'chide' in self._argsdict:
-                if self._argsdict['chide']:
-                    self._logger.info("Chiding people with missing projects...")
-                    Postman.send_missing_project_email(users_missing_project, project_name, self._logger)
 
     def _get_emails_from_file(self, email_file):
         """Returns a list of emails from the given file.
