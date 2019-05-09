@@ -264,30 +264,38 @@ their meaning, and how to use them.
 Section & Key Name | Value Description
 --- | ---
 **`[Proctor]`** | **Application-level configuration** |
-`working_dir` | Name of Proctor's working directory, to which it clones git repos and writes log files.
-`console_log_level` | Log level threshold. Messages at this level or greater appear in the console output. Uses the [Python logging levels](https://docs.python.org/3/library/logging.html). Set this value to `DEBUG` to see all log messages, `INFO` see to general messages and hide low-level details (recommended), and higher values to see only warnings, errors, and critical errors.  
-`logfile_name` | Name of file that captures all logging output, created in Proctor's `working_dir`. Supports _YYYYMMDD_ date replacement. Captures all logging information. To suppress file logging, remove the key or provide no value.
+_working_dir_ | Name of Proctor's working directory, to which it clones git repos and writes log files.
+_console_log_level_ | Log level threshold. Messages at this level or greater appear in the console output. Uses the [Python logging levels](https://docs.python.org/3/library/logging.html). Set this value to `DEBUG` to see all log messages, `INFO` see to general messages and hide low-level details (recommended), and higher values to see only warnings, errors, and critical errors.  
+_logfile_name_ | Name of file that captures all logging output, created in Proctor's `working_dir`. Supports _YYYYMMDD_ date replacement. Captures all logging information. To suppress file logging, remove the key or provide no value.
 **`[GitLabServer]`** | **GitLab Server endpoint and login information** 
-`url` | URL to the GitLab server that houses projects. You must have a valid account on this server, of course.
-`group_path_prefix` | Every group on the GitLab server is associated with a directory structure. The prefix is a unique moniker under which group elements are created, preventing conflicts (much like we use com.xyz to name Java packages). Suggest using your WIT username.
+_url_ | URL to the GitLab server that houses projects. You must have a valid account on this server, of course.
+_group_path_prefix_ | Every group on the GitLab server is associated with a directory structure. The prefix is a unique moniker under which group elements are created, preventing conflicts (much like we use com.xyz to name Java packages). Suggest using your WIT username.
 **`[GitLabUser]`** | **User login information**
-`private_token` | Private token associated with your GitLab user account. To find your private token, log into GitLab and look under [Profile Settings](https://eagle.cs.wit.edu/profile/account).
-**`[Projects]`** | **Information about default paths to source code, package names, and test suites.**
-`default_src_dir` | Name of the subdirectory that contains the source code for students' projects. Most projects use `src` and store all source code, including unit tests, under this directory. 
-`default_src_package` | Name of the package used by projects, e.g., `edu.wit.cs.comp1050`, relative to the `default_src_dir`. 
-`default_student_test_suite` | Fully qualified name of the Java test suite class, relative to the `default_src_dir`.
-`default_instructor_test_suite_dir` | Path to the directory where instructor's unit tests are stored.
-`default_instuctor_test_suite` | Fully qualified name of the instructor's Java test suite class, relative to `default_instructor_test_suite_dir`.
-`java_classpath` | Java _classpath_ value to use when building and running Java programs. If absent, Proctor determines the value from the `CLASSPATH` environment variable, if set,  or from various working directories if not.
-`junit_classpath` | Path that includes the two JUnit JAR files required to run JUnit 4.x tests. 
+_private_token_ | Private token associated with your GitLab user account. To find your private token, log into GitLab and look under [Profile Settings](https://eagle.cs.wit.edu/profile/account).
+**`[Defaults]`** | **Information about default paths to source code, package names, and test suites.**
+_default_src_dir_ | Name of the subdirectory that contains the source code for students' projects. Most projects use _src_ and store all source code, including unit tests, under this directory. 
+_default_src_package_ | Name of the package used by projects, e.g., _edu.wit.cs.comp1050_, relative to the _default_src_dir_. 
+_default_student_test_suite_ | Fully qualified name of the Java test suite class, relative to the _default_src_dir_.
+_default_instructor_test_suite_dir_ | Path to the directory where instructor's unit tests are stored.
+_default_instuctor_test_suite_ | Fully qualified name of the instructor's Java test suite class, relative to _default_instructor_test_suite_dir_.
+_java_classpath_ | Java _classpath_ value to use when building and running Java programs. If absent, Proctor determines the value from the _CLASSPATH_ environment variable, if set,  or from various working directories if not.
+_junit_classpath_ | Path that includes the two JUnit JAR files required to run JUnit 4.x tests. 
+**`[Projects]`** | **List of all projects used for various commands including _srefresh_.**
+_default_src_dir_ | Name of the subdirectory that contains the source code for students' projects. Most projects use _src_ and store all source code, including unit tests, under this directory. 
+_default_src_package_ | Name of the package used by projects, e.g., _edu.wit.cs.comp1050_, relative to the _default_src_dir_. 
+_default_student_test_suite_ | Fully qualified name of the Java test suite class, relative to the _default_src_dir_.
+_default_instructor_test_suite_dir_ | Path to the directory where instructor's unit tests are stored.
+_default_instuctor_test_suite_ | Fully qualified name of the instructor's Java test suite class, relative to _default_instructor_test_suite_dir_.
+_java_classpath_ | Java _classpath_ value to use when building and running Java programs. If absent, Proctor determines the value from the _CLASSPATH_ environment variable, if set,  or from various working directories if not.
+_junit_classpath_ | Path that includes the two JUnit JAR files required to run JUnit 4.x tests. 
 **`[SMTP]`** | **SMTP login and port information**
-`smtp_host` | URL or IP address to the SMTP server used to send emails
-`smtp_port` | Port to use to communicate with the SMTP server
-`smtp_user` | Your WIT email address
-`smtp_password` | Your WIT email password 
+_smtp_host_ | URL or IP address to the SMTP server used to send emails
+_smtp_port_ | Port to use to communicate with the SMTP server
+_smtp_user_ | Your WIT email address
+_smtp_password_ | Your WIT email password 
 **`<[project-name]>`** | **One section per project, e.g., `[pa1-review-student-master]`**
-`due_dt` | Project's due date and time in UTC format. Proctor compares this value to the project's last commit date on the server to determine timeliness.
-`src_dir`<br/>`student_test_suite`<br/>...| Project-specific overrides of the `[Projects]` `default_` keys. 
+_due_dt_ | Project's due date and time in UTC format. Proctor compares this value to the project's last commit date on the server to determine timeliness.
+_src_dir_<br/>_student_test_suite_<br/>...| Project-specific overrides of the `[Defaults]` _default__ keys. 
 
 **We discuss these keys in more detail in the relevant sections below.**
  
@@ -299,8 +307,6 @@ The following is an example of a configured `.proctor.cfg` file:
 [Proctor]
 working_dir = /Users/johnpuopolo/Adventure/proctor_wd
 console_log_level = INFO
-
-; Pattern YYYYMMDD is replaced by date on which you run Proctor
 logfile_name = proctor-YYYYMMDD.log
 
 [GitLabServer]
@@ -311,27 +317,45 @@ group_path_prefix = puopoloj1
 private_token = ***
 
 [Projects]
+pa1-review-student-master = Java review
+pa2-review-student-master = PA2
+pa3-oopcli-student-master = PA3
+pa4-oop2-student-master = PA4
+pa5-oop3-student-master = PA5
+
+[Defaults]
 default_src_dir = src
 default_src_package = edu.wit.cs.comp1050
 default_student_test_suite = edu.wit.cs.comp1050.tests.TestSuite
-default_instructor_test_suite_dir = {Proctor.working_dir}/grading
-default_instructor_test_suite = edu.wit.cs.comp1050.grading.GradingSuite
+default_instructor_test_suite_dir =
+default_instructor_test_suite =
 
-; Java-specific keys
+; Java-specific values
 java_classpath =
-junit_path = {Proctor.working_dir}/JUnitRunner/lib/junit-4.12.jar:{Proctor.working_dir}/JUnitRunner/lib/hamcrest-core-1.3.jar
+junit_path = {Proctor.working_dir}/JUnitRunner/lib/junit4.jar:{Proctor.working_dir}/JUnitRunner/lib/hamcrest-core-1.3.jar
+
+[pa1-review-student-master]
+due_dt = 2019-04-19T04:00:00-0400
+
+[pa2-review-student-master]
+due_dt = 2019-04-19T04:00:00-0400
+
+[pa3-oopcli-student-master]
+due_dt = 2019-04-19T04:00:00-0400
+
+[pa4-oop2-student-master]
+due_dt = 2019-04-19T04:00:00-0400
+
+[pa5-oop3-student-master]
+due_dt = 2019-04-19T04:00:00-0400
+src_dir = example/src/dir/not/default
+src_package = example.src.pkg.not.default
 
 [SMTP]
 smtp_host = smtp.office365.com
 smtp_port = 587
 smtp_user = puopoloj1@wit.edu
 smtp_pwd = ***
-
-[pa1-review-student-master]
-due_dt = 2019-03-05T16:00:00-0500
-
-[pa3-oopcli-student-master]
-due_dt = 2018-03-24T00:00:00-0500
 ```
 
 Note that the configuration file supports intelligent replacement values. In the sample
@@ -511,7 +535,7 @@ of the command use information from the configuration file.
 Command  | Parameter | Required? | Description
 --- | --- | --- | ---
 **`config`** | --verbose | No | Displays basic configuration information and the contents of the configuration file.
-**`glping`** | _none_ | No | Verifies access to the GitLab server.
+**`glping`** | _none_ | -- | Verifies access to the GitLab server.
 **`projects`** | --owner | No | User email for which to find projects.
 &nbsp; | --emails | No | Name of a file containing student (project owner) emails. Proctor fetches available project information for each email listed in the file. The format is expected to be one email per line.
 &nbsp; | --share | No | If this flag is present, shares an owner's project list with that owner.
@@ -524,6 +548,8 @@ Command  | Parameter | Required? | Description
 **`group create`** | --groupname | Yes | Name of the group to create.
 **`group append`** | --groupname | Yes | Name of the group to which to add users.
 &nbsp; | --emails | Yes | Name of a file containing users/emails. The users in the file are added to the specified group.
+**`srefresh`** | --owner | No | User email for which to refresh projects. The projects refreshed are those found in the `[Projects]` section of the configuration file.
+&nbsp; | --emails | No | Name of a file containing student (project owner) emails. Proctor refreshes available projects for each email listed in the file. The format is expected to be one email per line.
 
 #### Command Examples
 The following examples demonstrate all of Proctor's valid commands and their associated parameters.
@@ -542,6 +568,8 @@ $ python3 proctor.py...
     $ grade --project=someproject --emails=allstudents.txt --chide
     $ group create --groupname=extracredit
     $ group append --groupname=extracredit --emails=students.txt
+    $ srefresh --owner=puopoloj1@wit.edu
+    $ srefresh --emails=allstudents.txt
  ```
  
 ## Future Enhancements
