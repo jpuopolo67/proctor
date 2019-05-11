@@ -174,7 +174,6 @@ class Proctor:
         testrunner = UnitTestRunner()
         grader = Grader(builder, testrunner, gradebook)
 
-
         owner_emails = emails if not emails is None else \
             self._get_emails_from_file(self._argsdict['emails'])
         users_missing_project = []
