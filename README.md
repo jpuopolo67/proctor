@@ -574,6 +574,7 @@ $ python3 proctor.py...
     $ group create --groupname=extracredit
     $ group append --groupname=extracredit --emails=students.txt
     $ srefresh --owner=puopoloj1@wit.edu
+    $ srefresh --owner=puopolo1@wit.edu --grade
     $ srefresh --emails=allstudents.txt
     $ srefresh --emails=allstudents.txt --grade  
  ```

@@ -160,9 +160,11 @@ class Proctor:
                 self._grade_project(p, emails)
 
     def _grade_project(self, project_name=None, emails=None):
-        """Grades the given project for each email in the specified email file, pulled from program args.
+        """Grades the given project for each email in the specified email list.
         Projects are expected to have been cloned to a local directory previously.
-        Results in the gradebook file saved to the project's working directory."""
+        Results in the gradebook file saved to the project's working directory.
+        :param project_name: Name of the project to grade
+        :param emails: List of emails for which to clone the project"""
 
         if project_name is None:
             project_name = self._argsdict['project']
@@ -183,6 +185,7 @@ class Proctor:
         num_to_grade = len(owner_emails)
         current = 0
 
+        # Grade project for each student listed in owner_emails
         for email in owner_emails:
 
             email = email.strip(' ')
@@ -190,12 +193,11 @@ class Proctor:
 
             self._logger.info('---')
             self._logger.info(f'Owner {email} ({current} of {num_to_grade})')
-
             if len(email) == 0:
-                self._logger.info(f"Invalid owner email '{email}'. Check email file for blank lines.")
+                self._logger.debug(f"Invalid owner email '{email}'. Check email file for blank lines.")
                 continue
 
-            dir_to_grade = Path(project_dir) / email
+            dir_to_grade = Path(project_dir) / email    # interesting Path syntax
             if not dir_to_grade.exists():
                 users_missing_project.append(email)
                 self._logger.warning('Local project not found: {}. Try clone.'.format(str(dir_to_grade)))
@@ -220,11 +222,10 @@ class Proctor:
         gradebook.save()
 
         if users_missing_project:
-            self._logger.info("Local project missing for: {}".format(users_missing_project))
-            if 'chide' in self._argsdict:
-                if self._argsdict['chide']:
-                    self._logger.info("Chiding people with missing projects...")
-                    Postman.send_missing_project_email(users_missing_project, project_name, self._logger)
+            self._logger.info('Local project missing for: {}'.format(users_missing_project))
+            if 'chide' in self._argsdict and self._argsdict['chide']:
+                self._logger.info('Chiding people with missing projects...')
+                Postman.send_missing_project_email(users_missing_project, project_name, self._logger)
 
     def _clone_project(self, project_name, emails, force):
         """Clones the given project for each email in the specified email file.
@@ -235,7 +236,7 @@ class Proctor:
             self._logger.error("Cannot clone projects without valid emails. Exiting.")
             sys.exit(-1)
 
-        # Make sure emails that come from file are not blank
+        # Filter out blank lines
         owner_emails = [email for email in emails if len(email.strip(' ')) > 0]
 
         # Clone 'em
@@ -285,15 +286,22 @@ class Proctor:
             self._email_owners_project_summary_list(the_projects)
 
     def _parse_parameters_from_argv(self, *args):
+        """Helper function that accepts a variable number of string arguments that
+        represent the names of expected command-line parameters, e.g., --emails.
+        :param args: Variable number of string args representing the names of expected command-line parameters
+        :return A dictionary with the parameter name and a value, or None if the parameter was not specified
+        on the command line when the application was run"""
         parameters = dict()
         for arg in args:
             parameters[arg] = self._argsdict[arg] if arg in self._argsdict else None
         return parameters
 
     def _list_projects_for(self, owner):
+        """Gets the given owner's projects from the server
+        :param Email of the project owner
+        :return List of projects owned by the given owner (email)"""
         num_projects, projects = self._server.get_projects_for_owner(owner)
         self._logger.info(f'{owner} has {num_projects} projects')
-
         count = 1
         for p in projects:
             self._logger.info(f'{count:2} {p}')
@@ -303,7 +311,8 @@ class Proctor:
     def _list_projects_for_owners(self, email_file):
         """Iterates over the emails in the given email file and lists all projects owned by that person.
         If --share has been specified on the command line, email each person his or her project list.
-        :arg email_file: Full path to the file that contains the list of project owner emails to process. """
+        :arg email_file: Full path to the file that contains the list of emails to process.
+        :return Dictionary that contains owner -> list_of_projects mapping"""
         owner_emails = self._get_emails_from_file(email_file)
         num_emails = len(owner_emails)
 
@@ -326,7 +335,7 @@ class Proctor:
     def _email_owners_project_summary_list(self, projects):
         """Emails each person a summary list of what his or she has uploaded to the server and
         available to the instructor.
-        :arg projects: A dictionary that maps email->list of projects"""
+        :arg projects: A dictionary that maps email->list_of_projects"""
         num_owners = len(projects)
         self._logger.info(f'Sharing project information with {num_owners} owners')
 
@@ -343,7 +352,6 @@ class Proctor:
 
     def _glping(self):
         """Hails the GitLab server and returns information about the logged in user."""
-        #self._logger.info("glping")
         try:
             user = self._server.whoami()
             self._logger\
